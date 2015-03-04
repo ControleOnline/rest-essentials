@@ -1,6 +1,6 @@
 {
     "name": "controleonline/rest-essentials",
-    "description": "ZF2 Essentials",
+    "description": "REST Essentials",
     "license": "BSD-3-Clause",
     "homepage": "http://controleonline.com/",
     "type": "library",
