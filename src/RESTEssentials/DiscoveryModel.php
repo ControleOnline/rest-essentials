@@ -1,6 +1,6 @@
 <?php
 
-namespace REST_Essentials;
+namespace RESTEssentials;
 
 class DiscoveryModel {
 

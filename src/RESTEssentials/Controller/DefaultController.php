@@ -1,10 +1,10 @@
 <?php
 
-namespace REST_Essentials\Controller;
+namespace RESTEssentials\Controller;
 
 use Zend\Mvc\Controller\AbstractActionController;
 use Doctrine\ORM\EntityManager;
-use REST_Essentials\DiscoveryModel;
+use RESTEssentials\DiscoveryModel;
 use \Zend\View\Model\ViewModel;
 
 class DefaultController extends AbstractActionController {

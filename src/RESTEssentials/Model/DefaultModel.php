@@ -1,6 +1,6 @@
 <?php
 
-namespace REST_Essentials\Model;
+namespace RESTEssentials\Model;
 
 use Doctrine\ORM\Tools\Pagination\Paginator;
 

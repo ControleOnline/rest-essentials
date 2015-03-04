@@ -1,15 +1,15 @@
 <?php
 
-namespace REST_Essentials;
+namespace RESTEssentials;
 
 use Zend\Mvc\Router\Http\RouteInterface;
 use Zend\Stdlib\RequestInterface as Request;
 use Zend\Stdlib\ArrayUtils;
 use Zend\Mvc\Router\Exception\InvalidArgumentException;
 use Zend\Mvc\Router\Http\RouteMatch;
-use REST_Essentials\DiscoveryRoute;
+use RESTEssentials\DiscoveryRoute;
 
-class REST_Essentials implements RouteInterface {
+class RESTEssentials implements RouteInterface {
 
     protected $defaults = array();
 

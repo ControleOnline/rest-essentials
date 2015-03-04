@@ -69,7 +69,7 @@ In your config/application.config.php confiruration add the following:
 ```
 <?php
 $modules = array(
-    'REST_Essentials' 
+    'RESTEssentials' 
 );
 return array(
     'modules' => $modules,
@@ -91,8 +91,8 @@ In your module.config.php file:
 namespace YourNameSpace;
 
 return array(
-        'rest_essentials' => array(
-                //Configs of REST_Essentials here
+        'RESTEssentials' => array(
+                //Configs of RESTEssentials here
          )
 );
 ```

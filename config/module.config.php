@@ -3,13 +3,13 @@
 return array(
     'controllers' => array(
         'invokables' => array(
-            'REST_Essentials\Controller\Default' => 'REST_Essentials\Controller\DefaultController',
+            'RESTEssentials\Controller\Default' => 'RESTEssentials\Controller\DefaultController',
         ),
     ),
     'router' => array(
         'routes' => array(
             'default' => array(
-                'type' => 'REST_Essentials\REST_Essentials',
+                'type' => 'RESTEssentials\RESTEssentials',
                 'options' => array(
                     'route' => '/[:module][/:controller[/:action]]',
                     'constraints' => array(
@@ -18,7 +18,7 @@ return array(
                         'action' => '[a-zA-Z][a-zA-Z0-9_-]*',
                     ),
                     'defaults' => array(
-                        'module' => 'REST_Essentials',
+                        'module' => 'RESTEssentials',
                         'controller' => 'Default',
                         'action' => 'index',
                     ),

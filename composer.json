@@ -11,7 +11,7 @@
     ],
     "autoload": {
         "psr-4": {
-            "REST_Essentials\\": "src/REST_Essentials"
+            "RESTEssentials\\": "src/RESTEssentials"
         },
         "classmap": [
             "Module.php"

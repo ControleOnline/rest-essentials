@@ -1,6 +1,6 @@
 <?php
 
-namespace REST_Essentials;
+namespace RESTEssentials;
 
 use Zend\Stdlib\RequestInterface as Request;
 
@@ -36,7 +36,7 @@ class DiscoveryRoute {
         }
     }
 
-    protected function formarClass($class, $type, $module = null) {
+    protected function formatClass($class, $type, $module = null) {
         if ($module) {
             return '\\' . $this->camelCase($module) . '\\' . $this->camelCase($type) . '\\' . $this->camelCase($class);
         } else {
@@ -49,7 +49,7 @@ class DiscoveryRoute {
         $defaultRoute = $this->getDefaultRoute();
         $module = $this->camelCase((isset($routes[0]) ? str_replace('.json', '', $routes[0]) : $defaultRoute['module']));
         $class_name = $this->camelCase((isset($routes[1]) ? str_replace('.json', '', $routes[1]) : $defaultRoute['controller']));
-        $controller = $this->formarClass($class_name, 'Controller', $module) . 'Controller';
+        $controller = $this->formatClass($class_name, 'Controller', $module) . 'Controller';
 
         if (class_exists($controller)) {
             $this->setModule($module);
@@ -65,11 +65,11 @@ class DiscoveryRoute {
         $defaultRoute = $this->getDefaultRoute();
         $entity = $this->camelCase((isset($routes[0]) ? str_replace('.json', '', $routes[0]) : null));
         $this->setModule($defaultRoute['module']);
-        $this->setController($this->formarClass($defaultRoute['controller'], 'Controller', $defaultRoute['module']));
+        $this->setController($this->formatClass($defaultRoute['controller'], 'Controller', $defaultRoute['module']));
         $this->setAction($defaultRoute['action']);
 
         if ($entity) {
-            $class_name = $this->formarClass($entity, 'Entity');
+            $class_name = $this->formatClass($entity, 'Entity');
             $this->setEntity($entity);
             if (class_exists($class_name)) {
                 $url = $this->getUrl();
