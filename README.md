@@ -9,7 +9,8 @@ This software aims to be engaged in any system and without any additional line p
 
 ## Features ##
 * Automatic create Entities from Doctrine
-* Automatic create default routes to you REST
+* Automatic create default routes to REST
+* Automatic generate your Form to REST
 
 ## Installation ##
 ### Composer ###
