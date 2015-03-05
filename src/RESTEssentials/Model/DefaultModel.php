@@ -31,11 +31,18 @@ class DefaultModel {
         return $this->entity;
     }
 
-    public function form(array $params) {
-        $return = [];
+    public function getMetadata() {
         $cmf = new \Doctrine\ORM\Tools\DisconnectedClassMetadataFactory();
         $cmf->setEntityManager($this->em);
-        $metadata = $cmf->getMetadataFor($this->entity_name);        
+        return $cmf->getMetadataFor($this->entity_name);
+    }
+
+    public function form() {
+        $return = [];
+        $entity = explode('\\', $this->entity_name);
+        array_shift($entity);
+        $return['entity_name'] = strtolower(implode('-',$entity));
+        $metadata = $this->getMetadata();
         if ($metadata->fieldMappings) {
             $return['fields'] = $metadata->fieldMappings;
         }

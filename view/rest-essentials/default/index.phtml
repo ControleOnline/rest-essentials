@@ -1,5 +1,12 @@
-<form>
-    <?php foreach ($this->data['form']['fields'] as $key => $fields): ?>
+<form id="<?= $this->form['entity_name'] ?>">
+    <?php foreach ($this->form['fields'] as $key => $fields): ?>
         <input type="text" data-propreties='<?= json_encode($fields) ?>'>
     <?php endforeach ?>
 </form>
+
+<form id="<?= $this->form['entity_name'] ?>">
+    <?php foreach ($this->form['children']['fields'] as $key => $fields): ?>
+        <input type="text" data-propreties='<?= json_encode($fields) ?>'>
+    <?php endforeach ?>
+</form>
+<?php print_r($this->data); ?>

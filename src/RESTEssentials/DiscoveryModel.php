@@ -77,7 +77,7 @@ class DiscoveryModel {
 
         switch ($this->getMethod()) {
             case 'FORM':
-                $data = $default_model->form($this->params);
+                $data = $default_model->form();
                 break;
             case 'POST':
                 $data = $default_model->insert($this->params);

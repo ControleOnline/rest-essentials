@@ -3,7 +3,6 @@
 namespace RESTEssentials\Controller;
 
 use Zend\Mvc\Controller\AbstractActionController;
-use Doctrine\ORM\EntityManager;
 use RESTEssentials\DiscoveryModel;
 use \Zend\View\Model\ViewModel;
 
@@ -36,7 +35,7 @@ class DefaultController extends AbstractActionController {
     /**
      * Return a EntityManager
      *
-     * @return Doctrine\ORM\EntityManager
+     * @return \Doctrine\ORM\EntityManager
      */
     public function getEntityManager() {
         if (null === $this->_em) {
@@ -47,12 +46,16 @@ class DefaultController extends AbstractActionController {
 
     private function getForm() {
         $return = [];
+        $id = $this->params()->fromQuery('id');
+        if ($id) {            
+            $return = $this->getDataById($id);            
+        }
         $this->_model->setMethod('FORM');
         if ($this->_entity) {
-            $return['data']['form'] = $this->_model->discovery($this->_entity);
+            $return['form'] = $this->_model->discovery($this->_entity);
         }
         if ($this->_entity_children) {
-            $return['data']['form']['children'] = $this->_model->discovery($this->_entity_children);
+            $return['form']['children'] = $this->_model->discovery($this->_entity_children);
         }
         return $return;
     }
@@ -82,6 +85,7 @@ class DefaultController extends AbstractActionController {
         $return = [];
         $page = $this->params()->fromQuery('page') ? : 1;
         if ($this->_entity_children) {
+            $this->_model->setMethod('GET');
             $data = $this->_model->discovery($this->_entity_children, $this->_entity);
             $return = array(
                 'data' => $data,
@@ -111,7 +115,6 @@ class DefaultController extends AbstractActionController {
     }
 
     private function getData() {
-        $return = [];
         $id = $this->params()->fromQuery('id');
         if ($id) {
             $return = $this->getDataById($id);
