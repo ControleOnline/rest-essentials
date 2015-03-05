@@ -4,7 +4,7 @@
     <?php endforeach ?>
 </form>
 
-<form id="<?= $this->form['entity_name'] ?>">
+<form id="<?= $this->form['children']['entity_name'] ?>">
     <?php foreach ($this->form['children']['fields'] as $key => $fields): ?>
         <input type="text" data-propreties='<?= json_encode($fields) ?>'>
     <?php endforeach ?>

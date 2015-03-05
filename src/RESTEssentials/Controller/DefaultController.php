@@ -47,15 +47,15 @@ class DefaultController extends AbstractActionController {
     private function getForm() {
         $return = [];
         $id = $this->params()->fromQuery('id');
-        if ($id) {            
-            $return = $this->getDataById($id);            
+        if ($id) {
+            $return = $this->getDataById($id);
         }
         $this->_model->setMethod('FORM');
         if ($this->_entity) {
             $return['form'] = $this->_model->discovery($this->_entity);
         }
         if ($this->_entity_children) {
-            $return['form']['children'] = $this->_model->discovery($this->_entity_children);
+            $return['form']['children'] = $this->_model->discovery($this->_entity_children, $this->_entity);
         }
         return $return;
     }

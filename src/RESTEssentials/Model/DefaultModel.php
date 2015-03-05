@@ -16,6 +16,7 @@ class DefaultModel {
      */
     private $entity;
     private $entity_name;
+    private $children_entity_name;
     private $rows;
 
     public function __construct($em) {
@@ -37,20 +38,17 @@ class DefaultModel {
         return $cmf->getMetadataFor($this->entity_name);
     }
 
-    public function form() {
+    public function form($entity) {
         $return = [];
-        $entity = explode('\\', $this->entity_name);
-        array_shift($entity);
-        $return['entity_name'] = strtolower(implode('-',$entity));
         $metadata = $this->getMetadata();
         if ($metadata->fieldMappings) {
             $return['fields'] = $metadata->fieldMappings;
         }
-
         $assoc = $this->getAssociationNames();
         if ($assoc) {
             $return['assoc'] = $assoc;
         }
+        $return['entity_name'] = strtolower($entity);
         return $return;
     }
 
@@ -121,7 +119,11 @@ class DefaultModel {
     }
 
     public function getWithParent($id, $entity_parent, $page = 1, $limit = 100) {
-        $table = $this->em->getClassMetadata($this->entity_name)->getTableName();
+
+        $this->children_entity_name = $this->entity_name;
+        $this->entity_name = $entity_parent;
+
+        $table = $this->em->getClassMetadata($this->children_entity_name)->getTableName();
         $qbp = $this->em->getRepository('Entity\\' . ucfirst($entity_parent))->createQueryBuilder('e')->select('e');
         $qb = $this->entity->createQueryBuilder('e')->select('e');
         $parent = strtolower($entity_parent);
