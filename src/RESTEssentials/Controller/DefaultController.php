@@ -2,11 +2,10 @@
 
 namespace RESTEssentials\Controller;
 
-use Zend\Mvc\Controller\AbstractActionController;
 use RESTEssentials\DiscoveryModel;
-use \Zend\View\Model\ViewModel;
+use Zend\View\Model\ViewModel;
 
-class DefaultController extends AbstractActionController {
+class DefaultController extends \Zend\Mvc\Controller\AbstractActionController {
 
     /**
      * @var Doctrine\ORM\EntityManager
@@ -39,7 +38,7 @@ class DefaultController extends AbstractActionController {
      */
     public function getEntityManager() {
         if (null === $this->_em) {
-            $this->_em = $this->getServiceLocator()->get('Doctrine\ORM\EntityManager');
+            $this->_em = $this->getServiceLocator()->get('\Doctrine\ORM\EntityManager');
         }
         return $this->_em;
     }
@@ -54,9 +53,15 @@ class DefaultController extends AbstractActionController {
         if ($this->_entity) {
             $return['form'] = $this->_model->discovery($this->_entity);
         }
+        if ($id) {
+            $return['form']['method'] = 'PUT';
+        } else {
+            $return['form']['method'] = 'POST';
+        }
         if ($this->_entity_children) {
             $return['form']['children'] = $this->_model->discovery($this->_entity_children, $this->_entity);
         }
+        $return['form']['action'] = $this->getRequest()->getUri();
         return $return;
     }
 

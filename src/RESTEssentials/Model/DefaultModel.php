@@ -119,10 +119,9 @@ class DefaultModel {
     }
 
     public function getWithParent($id, $entity_parent, $page = 1, $limit = 100) {
-
+        $data = [];
         $this->children_entity_name = $this->entity_name;
         $this->entity_name = $entity_parent;
-
         $table = $this->em->getClassMetadata($this->children_entity_name)->getTableName();
         $qbp = $this->em->getRepository('Entity\\' . ucfirst($entity_parent))->createQueryBuilder('e')->select('e');
         $qb = $this->entity->createQueryBuilder('e')->select('e');
@@ -130,11 +129,7 @@ class DefaultModel {
         $data[$parent] = $qbp->where('e.id=' . $id)->getQuery()->getArrayResult();
         if (isset($data[$parent][0])) {
             $data[$parent] = $data[$parent][0];
-            $query = $qb
-                    ->where('e.' . $parent . '=' . $id)
-                    ->setFirstResult($limit * ($page - 1))
-                    ->setMaxResults($limit)
-                    ->getQuery();
+            $query = $qb->where('e.' . $parent . '=' . $id)->setFirstResult($limit * ($page - 1))->setMaxResults($limit)->getQuery();
             $paginator = new Paginator($query);
             $data[$parent][strtolower($table)] = $query->getArrayResult();
             $this->rows = $paginator->count();
