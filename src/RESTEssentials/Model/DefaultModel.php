@@ -32,8 +32,18 @@ class DefaultModel {
     }
 
     public function form(array $params) {
-        $return['Assoc'] = $this->getAssociationNames();
-        $return['Fields'] = $this->getFieldNames();
+        $return = [];
+        $cmf = new \Doctrine\ORM\Tools\DisconnectedClassMetadataFactory();
+        $cmf->setEntityManager($this->em);
+        $metadata = $cmf->getMetadataFor($this->entity_name);        
+        if ($metadata->fieldMappings) {
+            $return['fields'] = $metadata->fieldMappings;
+        }
+
+        $assoc = $this->getAssociationNames();
+        if ($assoc) {
+            $return['assoc'] = $assoc;
+        }
         return $return;
     }
 

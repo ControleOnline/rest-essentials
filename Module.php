@@ -40,7 +40,7 @@ class Module {
     }
 
     public function init(\Zend\ModuleManager\ModuleManager $mm) {
-        $uri = array_values(array_filter(explode('/', $_SERVER['REQUEST_URI'])));
+        $uri = array_values(array_filter(explode('/', filter_input(INPUT_SERVER, 'REQUEST_URI'))));
         if (isset($uri[0]) && isset($uri[1])) {
             $module = explode('.', ucfirst($uri[0]));
             $controller = explode('.', ucfirst($uri[1]));
@@ -89,7 +89,6 @@ class Module {
             } else {
                 return false;
             }
-            
         }
         return false;
     }

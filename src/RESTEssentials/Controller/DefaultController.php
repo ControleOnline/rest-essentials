@@ -12,10 +12,25 @@ class DefaultController extends AbstractActionController {
     /**
      * @var Doctrine\ORM\EntityManager
      */
-    protected $em;
+    protected $_em;
+    protected $_allowed_methods = array('GET', 'POST', 'PUT', 'DELETE', 'FORM');
+    protected $_method;
+    protected $_model;
+    protected $_view;
+    protected $_entity_children;
+    protected $_entity;
 
-    public function setEntityManager(EntityManager $em) {
-        $this->em = $em;
+    private function initialize() {
+        $method_request = strtoupper($this->params()->fromQuery('method') ? : filter_input(INPUT_SERVER, 'REQUEST_METHOD'));
+        $this->_method = in_array($method_request, $this->_allowed_methods) ? $method_request : 'GET';
+        $this->_model = new DiscoveryModel($this->getEntityManager(), $this->_method, $this->getRequest());
+        $this->_view = new ViewModel();
+        $this->_entity_children = $this->params('entity_children');
+        $this->_entity = $this->params('entity');
+    }
+
+    public function setEntityManager(\Doctrine\ORM\EntityManager $em) {
+        $this->_em = $em;
     }
 
     /**
@@ -24,92 +39,112 @@ class DefaultController extends AbstractActionController {
      * @return Doctrine\ORM\EntityManager
      */
     public function getEntityManager() {
-        if (null === $this->em) {
-            $this->em = $this->getServiceLocator()->get('Doctrine\ORM\EntityManager');
+        if (null === $this->_em) {
+            $this->_em = $this->getServiceLocator()->get('Doctrine\ORM\EntityManager');
         }
-        return $this->em;
+        return $this->_em;
+    }
+
+    private function getForm() {
+        $return = [];
+        $this->_model->setMethod('FORM');
+        if ($this->_entity) {
+            $return['data']['form'] = $this->_model->discovery($this->_entity);
+        }
+        if ($this->_entity_children) {
+            $return['data']['form']['children'] = $this->_model->discovery($this->_entity_children);
+        }
+        return $return;
+    }
+
+    private function alterData() {
+        $return = [];
+        $data = $this->_model->discovery($this->_entity);
+        if ($data) {
+            $return['success'] = true;
+        } else {
+            $return['error']['code'] = 0;
+            $return['error']['message'] = 'No register with this ID';
+            $return['success'] = false;
+        }
+        return $return;
+    }
+
+    private function insertData() {
+        $data = $this->_model->discovery($this->_entity);
+        $return = array(
+            'data' => $data
+        );
+        return $return;
+    }
+
+    private function getDataById($id) {
+        $return = [];
+        $page = $this->params()->fromQuery('page') ? : 1;
+        if ($this->_entity_children) {
+            $data = $this->_model->discovery($this->_entity_children, $this->_entity);
+            $return = array(
+                'data' => $data,
+                'count' => isset($data[strtolower($this->_entity)][strtolower($this->_entity_children)]) ? count($data[strtolower($this->_entity)][strtolower($this->_entity_children)]) : 0,
+                'total' => (int) $this->_model->getTotalResults(),
+                'page' => (int) $page
+            );
+        } elseif ($id) {
+            $data = $this->_model->discovery($this->_entity);
+            $return = array(
+                'data' => $data
+            );
+        }
+        return $return;
+    }
+
+    private function getAllData() {
+        $page = $this->params()->fromQuery('page') ? : 1;
+        $data = $this->_model->discovery($this->_entity);
+        $return = array(
+            'data' => $data,
+            'count' => count($data),
+            'total' => (int) $this->_model->getTotalResults(),
+            'page' => (int) $page
+        );
+        return $return;
+    }
+
+    private function getData() {
+        $return = [];
+        $id = $this->params()->fromQuery('id');
+        if ($id) {
+            $return = $this->getDataById($id);
+        } else {
+            $return = $this->getAllData();
+        }
+        return $return;
     }
 
     public function indexAction() {
+        $this->initialize();
+        $return = [];
         try {
-            $allowed_methods = array('GET', 'POST', 'PUT', 'DELETE', 'FORM');
-            $method_request = strtoupper($this->params()->fromQuery('method') ? : $_SERVER['REQUEST_METHOD']);
-            $method = in_array($method_request, $allowed_methods) ? $method_request : 'GET';
-            $DiscoveryModel = new DiscoveryModel($this->getEntityManager(), $method, $this->getRequest());
-            $view = new ViewModel();
-
-            switch ($method) {
+            switch ($this->_method) {
                 case 'FORM':
-                    $view->setTerminal(true);
-                    $DiscoveryModel->setMethod('FORM');
-                    $return['form']['parent'] = $DiscoveryModel->discovery($this->params('entity'));
-                    $return['form']['children'] = $DiscoveryModel->discovery($this->params('entity_children'));
+                    $this->_view->setTerminal(true);
+                    $return = $this->getForm();
                     break;
                 case 'DELETE':
                 case 'PUT':
-                    $data = $DiscoveryModel->discovery($this->params('entity'));
-                    if ($data) {
-                        $return['success'] = true;
-                    } else {
-                        $return['error']['code'] = 0;
-                        $return['error']['message'] = 'No register with this ID';
-                        $return['success'] = false;
-                    }
-                    break;
+                    $return = $this->alterData();
                 case 'POST':
-                    $data = $DiscoveryModel->discovery($this->params('entity'));
-                    $return = array(
-                        'data' => $data
-                    );
-                    break;
+                    $return = $this->insertData();
                 case 'GET':
-                    $page = $this->params()->fromQuery('page') ? : 1;
-                    $entity_children = $this->params('entity_children');
-                    $id = $this->params()->fromQuery('id');
-                    if ($entity_children && $id) {
-                        $data = $DiscoveryModel->discovery($entity_children, $this->params('entity'));
-                    } else {
-                        $data = $DiscoveryModel->discovery($this->params('entity'));
-                    }
-
-                    if ($entity_children && $id && $data) {
-                        $total = $DiscoveryModel->getTotalResults();
-                        $return = array(
-                            'data' => $data,
-                            'count' => count($data[strtolower($this->params('entity'))][strtolower($entity_children)]),
-                            'total' => (int) $total,
-                            'page' => (int) $page
-                        );
-                    } elseif ($id && $data) {
-                        $return = array(
-                            'data' => $data
-                        );
-                    } else {
-                        $total = $DiscoveryModel->getTotalResults();
-                        $return = array(
-                            'data' => $data,
-                            'count' => count($data),
-                            'total' => (int) $total,
-                            'page' => (int) $page
-                        );
-                    }
-                    break;
+                    $return = $this->getData();
             }
-            $return['method'] = $method;
+            $return['method'] = $this->_method;
             $return['success'] = isset($return['success']) ? $return['success'] : true;
-
-            $view->setVariables($return);
-            return $view;
         } catch (\Exception $e) {
-            $return = array(
-                'error' => array(
-                    'code' => $e->getCode(),
-                    'message' => $e->getMessage(),
-                ),
-                'success' => false
-            );
-            return new ViewModel($return);
+            $return = array('error' => array('code' => $e->getCode(), 'message' => $e->getMessage(),), 'success' => false);
         }
+        $this->_view->setVariables($return);
+        return $this->_view;
     }
 
 }

@@ -1,5 +1,5 @@
-<pre>
-    <?php
-    print_r($this->form);    
-    ?>
-</pre>
+<form>
+    <?php foreach ($this->data['form']['fields'] as $key => $fields): ?>
+        <input type="text" data-propreties='<?= json_encode($fields) ?>'>
+    <?php endforeach ?>
+</form>
