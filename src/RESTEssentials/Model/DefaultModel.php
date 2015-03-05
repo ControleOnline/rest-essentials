@@ -31,6 +31,12 @@ class DefaultModel {
         return $this->entity;
     }
 
+    public function form(array $params) {
+        $return['Assoc'] = $this->getAssociationNames();
+        $return['Fields'] = $this->getFieldNames();
+        return $return;
+    }
+
     public function delete($id) {
         $entity = $this->entity->find($id);
         if ($entity) {
@@ -102,11 +108,20 @@ class DefaultModel {
         $qbp = $this->em->getRepository('Entity\\' . ucfirst($entity_parent))->createQueryBuilder('e')->select('e');
         $qb = $this->entity->createQueryBuilder('e')->select('e');
         $parent = strtolower($entity_parent);
-        $data[$parent] = $qbp->where('e.id=' . $id)->getQuery()->getArrayResult()[0];
-        $data[$parent][strtolower($table)] = $qb->where('e.' . $parent . '=' . $id)->getQuery()->getArrayResult();
-        $query = $qb->getQuery()->setFirstResult($limit * ($page - 1))->setMaxResults($limit);
-        $paginator = new Paginator($query);
-        $this->rows = count($paginator);
+        $data[$parent] = $qbp->where('e.id=' . $id)->getQuery()->getArrayResult();
+        if (isset($data[$parent][0])) {
+            $data[$parent] = $data[$parent][0];
+            $query = $qb
+                    ->where('e.' . $parent . '=' . $id)
+                    ->setFirstResult($limit * ($page - 1))
+                    ->setMaxResults($limit)
+                    ->getQuery();
+            $paginator = new Paginator($query);
+            $data[$parent][strtolower($table)] = $query->getArrayResult();
+            $this->rows = $paginator->count();
+        } else {
+            unset($data[$parent]);
+        }
         return $data;
     }
 
@@ -117,7 +132,7 @@ class DefaultModel {
         } else {
             $query = $qb->getQuery()->setFirstResult($limit * ($page - 1))->setMaxResults($limit);
             $paginator = new Paginator($query);
-            $this->rows = count($paginator);
+            $this->rows = $paginator->count();
             return $query->getArrayResult();
         }
     }

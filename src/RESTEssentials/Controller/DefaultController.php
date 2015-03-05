@@ -30,14 +30,21 @@ class DefaultController extends AbstractActionController {
         return $this->em;
     }
 
-    public function indexAction() {              
+    public function indexAction() {
         try {
-            $allowed_methods = array('GET', 'POST', 'PUT', 'DELETE');
+            $allowed_methods = array('GET', 'POST', 'PUT', 'DELETE', 'FORM');
             $method_request = strtoupper($this->params()->fromQuery('method') ? : $_SERVER['REQUEST_METHOD']);
             $method = in_array($method_request, $allowed_methods) ? $method_request : 'GET';
             $DiscoveryModel = new DiscoveryModel($this->getEntityManager(), $method, $this->getRequest());
+            $view = new ViewModel();
 
             switch ($method) {
+                case 'FORM':
+                    $view->setTerminal(true);
+                    $DiscoveryModel->setMethod('FORM');
+                    $return['form']['parent'] = $DiscoveryModel->discovery($this->params('entity'));
+                    $return['form']['children'] = $DiscoveryModel->discovery($this->params('entity_children'));
+                    break;
                 case 'DELETE':
                 case 'PUT':
                     $data = $DiscoveryModel->discovery($this->params('entity'));
@@ -90,7 +97,9 @@ class DefaultController extends AbstractActionController {
             }
             $return['method'] = $method;
             $return['success'] = isset($return['success']) ? $return['success'] : true;
-            return new ViewModel($return);
+
+            $view->setVariables($return);
+            return $view;
         } catch (\Exception $e) {
             $return = array(
                 'error' => array(

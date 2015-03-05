@@ -44,6 +44,7 @@ class RESTEssentials implements RouteInterface {
         $discovery->setUrl($alias);
         $options = $discovery->getRoute();
         $discovery->setGetParams($request);
+        $discovery->setMethod($request,$fullPath);
         return new RouteMatch($options);
     }
 

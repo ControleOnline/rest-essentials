@@ -57,7 +57,7 @@ class Module {
         );
     }
 
-    public function finishJsonStrategy($e) {
+    public function finishJsonStrategy(\Zend\Mvc\MvcEvent $e) {
         if ($this->config['jsonStrategy']) {
             $response = new Response();
             $response->getHeaders()->addHeaderLine('Content-Type', 'application/json; charset=utf-8');
@@ -66,25 +66,35 @@ class Module {
         }
     }
 
-    public function setResponseType(MvcEvent $e) {
-        if ($this->config['jsonStrategy']) {
-            $request = $e->getRequest();
-            $headers = $request->getHeaders();
-            $uri = $e->getRequest()->getUri()->getPath();
-            $compare = '.json';
-            $is_json = substr_compare($uri, $compare, strlen($uri) - strlen($compare), strlen($compare)) === 0;
-            if ($headers->has('accept') || $is_json) {
-                $accept = $headers->get('accept');
-                $match = $accept->match('application/json');
-                if ($is_json || ($match && $match->getTypeString() != '*/*')) {
-                    $e->getApplication()->getEventManager()->attach('render', array($this, 'registerJsonStrategy'), 100);
-                    $e->getApplication()->getEventManager()->attach(MvcEvent::EVENT_FINISH, array($this, 'finishJsonStrategy'));
-                }
-            }
-        }
+    public function setResponseType(\Zend\Mvc\MvcEvent $e) {
+        $this->verifyJsonStrategy($e);
     }
 
-    public function registerJsonStrategy($e) {
+    public function verifyJsonStrategy(\Zend\Mvc\MvcEvent $e) {
+        if (!$this->config['jsonStrategy']) {
+            return false;
+        }
+        $request = $e->getRequest();
+        $headers = $request->getHeaders();
+        $uri = $request->getUri()->getPath();
+        $compare = '.json';
+        $is_json = substr_compare($uri, $compare, strlen($uri) - strlen($compare), strlen($compare)) === 0;
+        if ($headers->has('accept') || $is_json) {
+            $accept = $headers->get('accept');
+            $match = $accept->match('application/json');
+            if ($match && $match->getTypeString() != '*/*' || $is_json) {
+                $e->getApplication()->getEventManager()->attach('render', array($this, 'registerJsonStrategy'), 100);
+                $e->getApplication()->getEventManager()->attach(MvcEvent::EVENT_FINISH, array($this, 'finishJsonStrategy'));
+                return true;
+            } else {
+                return false;
+            }
+            
+        }
+        return false;
+    }
+
+    public function registerJsonStrategy(\Zend\Mvc\MvcEvent $e) {
         if ($this->config['jsonStrategy']) {
             $app = $e->getTarget();
             $locator = $app->getServiceManager();
