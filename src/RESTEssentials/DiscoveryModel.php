@@ -77,7 +77,7 @@ class DiscoveryModel {
 
         switch ($this->getMethod()) {
             case 'FORM':
-                $data = $default_model->form($entity);
+                $data = $default_model->form($entity,$entity_parent);
                 break;
             case 'POST':
                 $data = $default_model->insert($this->params);

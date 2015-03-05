@@ -40,6 +40,7 @@ class DefaultModel {
 
     public function form($entity) {
         $return = [];
+        $return['form_name'] = strtolower($entity);
         $metadata = $this->getMetadata();
         if ($metadata->fieldMappings) {
             $return['fields'] = $metadata->fieldMappings;
@@ -47,8 +48,7 @@ class DefaultModel {
         $assoc = $this->getAssociationNames();
         if ($assoc) {
             $return['assoc'] = $assoc;
-        }
-        $return['entity_name'] = strtolower($entity);
+        }        
         return $return;
     }
 

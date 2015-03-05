@@ -43,7 +43,6 @@ class DiscoveryEntity {
         $config->setMetadataCacheImpl(new \Doctrine\Common\Cache\ArrayCache);
         $config->setProxyDir($this->entityFolder . DIRECTORY_SEPARATOR . 'proxies');
         $config->setProxyNamespace('Proxies');
-        //$config->setAutoGenerateProxyClasses(APPLICATION_ENV === 'development' ? true : false);        
         $this->em = \Doctrine\ORM\EntityManager::create($connectionParams, $config);
     }
 
