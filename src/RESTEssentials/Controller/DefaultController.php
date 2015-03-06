@@ -43,25 +43,18 @@ class DefaultController extends \Zend\Mvc\Controller\AbstractActionController {
         return $this->_em;
     }
 
-    private function getForm() {                
+    private function getForm() {
         $return = [];
         $id = $this->params()->fromQuery('id');
-        if ($id) {
-            $return = $this->getDataById($id);
-        }
         $this->_model->setMethod('FORM');
+        $return['form']['method'] = $id ? 'PUT' : 'POST';
+        $return['form']['action'] = $this->getRequest()->getUri();
         if ($this->_entity) {
             $return['form'] = $this->_model->discovery($this->_entity);
-        }
-        if ($id) {
-            $return['form']['method'] = 'PUT';
-        } else {
-            $return['form']['method'] = 'POST';
         }
         if ($this->_entity_children) {
             $return['form']['children'] = $this->_model->discovery($this->_entity_children, $this->_entity);
         }
-        $return['form']['action'] = $this->getRequest()->getUri();
         return $return;
     }
 

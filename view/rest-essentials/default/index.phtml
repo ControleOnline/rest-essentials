@@ -1,18 +1,26 @@
 <?php if (isset($this->form['fields'])): ?>
     <form action="<?= $this->form['action'] ?>" method="<?= $this->form['method'] ?>" name="form-<?= $this->form['form_name'] ?>">
         <?php foreach ($this->form['fields'] as $key => $fields): ?>
-            <input type="text" data-propreties='<?= json_encode($fields) ?>'>
+            <span>
+                <label id="label-<?= $key ?>" for="input-<?= $key ?>"><?= ucfirst($key) ?></label>
+                <input id="input-<?= $key ?>" name="<?= $key ?>" type="text" data-propreties='<?= json_encode($fields) ?>'>
+            </span>
         <?php endforeach ?>
-        <input type="submit">
+        <span>
+            <input type="submit">
+        </span>
     </form>
 <?php endif; ?>
-
 <?php if (isset($this->form['children'])): ?>
     <form action="<?= $this->form['action'] ?>" method="<?= $this->form['method'] ?>" name="form-<?= $this->form['children']['form_name'] ?>">
         <?php foreach ($this->form['children']['fields'] as $key => $fields): ?>
-            <input type="text" data-propreties='<?= json_encode($fields) ?>'>
+            <span>
+                <label id="label-<?= $key ?>" for="input-<?= $key ?>"><?= ucfirst($key) ?></label>
+                <input id="input-<?= $key ?>" name="<?= $key ?>" type="text" data-propreties='<?= json_encode($fields) ?>'>
+            </span>
         <?php endforeach ?>
-        <input type="submit">
+        <span>
+            <input type="submit">
+        </span>
     </form>    
 <?php endif; ?>
-<?php print_r($this->data); ?>
