@@ -51,6 +51,7 @@ class DefaultController extends \Zend\Mvc\Controller\AbstractActionController {
             $return['form'] = $this->_model->discovery($this->_entity);
         }
         if ($this->_entity_children) {
+            $return['form']['id'] = $id;
             $return['form']['children'] = $this->_model->discovery($this->_entity_children, $this->_entity);
         }
         $return['form']['method'] = $id ? 'PUT' : 'POST';

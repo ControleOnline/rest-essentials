@@ -1,4 +1,19 @@
-<?php if (isset($this->form['fields'])): ?>
+<?php if (isset($this->form['children'])): ?>
+    <form action="<?= $this->form['action'] ?>" method="<?= $this->form['method'] ?>" name="form-<?= $this->form['children']['form_name'] ?>">        
+        <div class="form-group">        
+            <label id="label-<?= $this->form['form_name'] ?>" for="input-<?= $this->form['form_name'] ?>"><?= ucfirst($this->form['form_name']) ?>: </label>
+            <input id="input-<?= $this->form['form_name'] ?>" name="<?= $this->form['form_name'] ?>_id" type="hidden" value="<?= $this->form['id'] ?>" disabled>            
+            <p class="form-control-static"><?= $this->form['id'] ?></p>
+        </div>
+        <?php foreach ($this->form['children']['fields'] as $key => $fields): ?>
+            <div class="form-group">
+                <label id="label-<?= $key ?>" for="input-<?= $key ?>"><?= ucfirst($key) ?>: </label>
+                <input id="input-<?= $key ?>" name="<?= $key ?>" type="text" data-propreties='<?= json_encode($fields) ?>' placeholder="Enter <?= ucfirst($key) ?>">
+            </div>
+        <?php endforeach ?>
+        <button type="submit" class="btn btn-default">Submit</button>
+    </form>    
+<?php elseif (isset($this->form['fields'])): ?>
     <form action="<?= $this->form['action'] ?>" method="<?= $this->form['method'] ?>" name="form-<?= $this->form['form_name'] ?>" role="form">
         <?php foreach ($this->form['fields'] as $key => $fields): ?>
             <div class="form-group">
@@ -8,15 +23,4 @@
         <?php endforeach ?>        
         <button type="submit" class="btn btn-default">Submit</button>        
     </form>
-<?php endif; ?>
-<?php if (isset($this->form['children'])): ?>
-    <form action="<?= $this->form['action'] ?>" method="<?= $this->form['method'] ?>" name="form-<?= $this->form['children']['form_name'] ?>">
-        <?php foreach ($this->form['children']['fields'] as $key => $fields): ?>
-            <div class="form-group">
-                <label id="label-<?= $key ?>" for="input-<?= $key ?>"><?= ucfirst($key) ?>: </label>
-                <input id="input-<?= $key ?>" name="<?= $key ?>" type="text" data-propreties='<?= json_encode($fields) ?>' placeholder="Enter <?= ucfirst($key) ?>">
-            </div>
-        <?php endforeach ?>
-        <button type="submit" class="btn btn-default">Submit</button>
-    </form>    
 <?php endif; ?>
