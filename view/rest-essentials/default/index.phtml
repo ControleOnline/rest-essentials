@@ -1,26 +1,22 @@
 <?php if (isset($this->form['fields'])): ?>
-    <form action="<?= $this->form['action'] ?>" method="<?= $this->form['method'] ?>" name="form-<?= $this->form['form_name'] ?>">
+    <form action="<?= $this->form['action'] ?>" method="<?= $this->form['method'] ?>" name="form-<?= $this->form['form_name'] ?>" role="form">
         <?php foreach ($this->form['fields'] as $key => $fields): ?>
-            <span>
-                <label id="label-<?= $key ?>" for="input-<?= $key ?>"><?= ucfirst($key) ?></label>
-                <input id="input-<?= $key ?>" name="<?= $key ?>" type="text" data-propreties='<?= json_encode($fields) ?>'>
-            </span>
-        <?php endforeach ?>
-        <span>
-            <input type="submit">
-        </span>
+            <div class="form-group">
+                <label id="label-<?= $key ?>" for="input-<?= $key ?>"><?= ucfirst($key) ?>: </label>
+                <input id="input-<?= $key ?>" name="<?= $key ?>" type="text" data-propreties='<?= json_encode($fields) ?>' placeholder="Enter <?= ucfirst($key) ?>">
+            </div>
+        <?php endforeach ?>        
+        <button type="submit" class="btn btn-default">Submit</button>        
     </form>
 <?php endif; ?>
 <?php if (isset($this->form['children'])): ?>
     <form action="<?= $this->form['action'] ?>" method="<?= $this->form['method'] ?>" name="form-<?= $this->form['children']['form_name'] ?>">
         <?php foreach ($this->form['children']['fields'] as $key => $fields): ?>
-            <span>
-                <label id="label-<?= $key ?>" for="input-<?= $key ?>"><?= ucfirst($key) ?></label>
-                <input id="input-<?= $key ?>" name="<?= $key ?>" type="text" data-propreties='<?= json_encode($fields) ?>'>
-            </span>
+            <div class="form-group">
+                <label id="label-<?= $key ?>" for="input-<?= $key ?>"><?= ucfirst($key) ?>: </label>
+                <input id="input-<?= $key ?>" name="<?= $key ?>" type="text" data-propreties='<?= json_encode($fields) ?>' placeholder="Enter <?= ucfirst($key) ?>">
+            </div>
         <?php endforeach ?>
-        <span>
-            <input type="submit">
-        </span>
+        <button type="submit" class="btn btn-default">Submit</button>
     </form>    
 <?php endif; ?>
