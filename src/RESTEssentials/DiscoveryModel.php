@@ -93,9 +93,9 @@ class DiscoveryModel {
                 $page = isset($this->params['page']) ? $this->params['page'] : 1;
                 $limit = isset($this->params['limit']) ? $this->params['limit'] : 100;
                 if ($entity_parent) {
-                    $data = $default_model->getWithParent($id, $entity_parent, $page, $limit);
+                    $data = $default_model->getWithParent($id, $entity_parent, $page, $limit);                    
                 } else {
-                    $data = $default_model->get($id, $page, $limit);
+                    $data = $default_model->get($id, $page, $limit);                    
                 }
                 $this->rows = $default_model->getTotalResults();
                 break;

@@ -48,7 +48,7 @@ class DefaultModel {
         $assoc = $this->getAssociationNames();
         if ($assoc) {
             $return['assoc'] = $assoc;
-        }        
+        }
         return $return;
     }
 
@@ -118,18 +118,46 @@ class DefaultModel {
         return $this->em->getClassMetadata($this->entity_name)->getFieldNames();
     }
 
+    private function getChilds(\Doctrine\ORM\QueryBuilder &$qb, $entity_name, array $alias, $join_alias, $parent = null, &$deep = 0) {
+        if ($deep < 500) {
+            $childs = $this->em->getClassMetadata($entity_name)->getAssociationMappings();
+            foreach ($childs as $key => $child) {
+                if (strtolower($key) != strtolower($parent) && ($parent || (!$parent && $deep == 0))) {
+                    foreach ($child['joinColumnFieldNames'] as $collum) {
+                        $deep ++;
+                        $j = $this->generateAlias();
+                        $table = str_replace('_id', '', $collum);
+                        $alias[] = $j;
+                        $qb->select($alias);
+                        $qb->leftJoin($join_alias . '.' . $table, $j);
+                        $table_child = $this->em->getClassMetadata('Entity\\' . ucfirst($table))->getAssociationMappings();
+                        foreach ($table_child as $k => $p) {
+                            $this->getChilds($qb, 'Entity\\' . ucfirst($table), $alias, $j, 'Entity\\' . ucfirst($k), $deep);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private function generateAlias($lenght = 10) {
+        return substr(str_shuffle("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"), 0, $lenght);
+    }
+
     public function getWithParent($id, $entity_parent, $page = 1, $limit = 100) {
         $data = [];
         $this->children_entity_name = $this->entity_name;
         $this->entity_name = $entity_parent;
         $table = $this->em->getClassMetadata($this->children_entity_name)->getTableName();
         $qbp = $this->em->getRepository('Entity\\' . ucfirst($entity_parent))->createQueryBuilder('e')->select('e');
-        $qb = $this->entity->createQueryBuilder('e')->select('e');
+        $alias = $this->generateAlias();
+        $qb = $this->entity->createQueryBuilder($alias)->select($alias);
         $parent = strtolower($entity_parent);
+        $this->getChilds($qb, $this->children_entity_name, array($alias), $alias, $this->entity_name);
         $data[$parent] = $qbp->where('e.id=' . $id)->getQuery()->getArrayResult();
         if (isset($data[$parent][0])) {
             $data[$parent] = $data[$parent][0];
-            $query = $qb->where('e.' . $parent . '=' . $id)->setFirstResult($limit * ($page - 1))->setMaxResults($limit)->getQuery();
+            $query = $qb->where($alias . '.' . $parent . '=' . $id)->setFirstResult($limit * ($page - 1))->setMaxResults($limit)->getQuery();
             $paginator = new Paginator($query);
             $data[$parent][strtolower($table)] = $query->getArrayResult();
             $this->rows = $paginator->count();
@@ -140,9 +168,13 @@ class DefaultModel {
     }
 
     public function get($id = null, $page = 1, $limit = 100) {
-        $qb = $this->entity->createQueryBuilder('e')->select('e');
+        $alias = $this->generateAlias();
+        $qb = $this->entity->createQueryBuilder($alias)->select($alias);
         if ($id) {
-            return $qb->where('e.id=' . $id)->getQuery()->getArrayResult();
+            $qb->where($alias . '.id=' . $id);
+            $this->getChilds($qb, $this->entity_name, array($alias), $alias);
+            $query = $qb->getQuery();
+            return $query->getArrayResult();
         } else {
             $query = $qb->getQuery()->setFirstResult($limit * ($page - 1))->setMaxResults($limit);
             $paginator = new Paginator($query);
