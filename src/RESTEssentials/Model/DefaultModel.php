@@ -172,15 +172,12 @@ class DefaultModel {
         $qb = $this->entity->createQueryBuilder($alias)->select($alias);
         if ($id) {
             $qb->where($alias . '.id=' . $id);
-            $this->getChilds($qb, $this->entity_name, array($alias), $alias);
-            $query = $qb->getQuery();
-            return $query->getArrayResult();
-        } else {
-            $query = $qb->getQuery()->setFirstResult($limit * ($page - 1))->setMaxResults($limit);
-            $paginator = new Paginator($query);
-            $this->rows = $paginator->count();
-            return $query->getArrayResult();
         }
+        $this->getChilds($qb, $this->entity_name, array($alias), $alias);
+        $query = $qb->getQuery()->setFirstResult($limit * ($page - 1))->setMaxResults($limit);
+        $paginator = new Paginator($query);
+        $this->rows = $paginator->count();
+        return $query->getArrayResult();
     }
 
     public function toArray($data) {
