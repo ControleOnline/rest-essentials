@@ -126,7 +126,7 @@ class DefaultModel {
                     foreach ($child['joinColumnFieldNames'] as $collum) {
                         $deep ++;
                         $j = $this->generateAlias();
-                        $table = str_replace('_id', '', $collum);
+                        $table = strtolower(str_replace('Entity\\', '', $child['targetEntity']));
                         $alias[] = $j;
                         $qb->select($alias);
                         $qb->leftJoin($join_alias . '.' . $table, $j);
