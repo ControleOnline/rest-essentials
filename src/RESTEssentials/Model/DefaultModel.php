@@ -119,7 +119,7 @@ class DefaultModel {
     }
 
     private function getChilds(\Doctrine\ORM\QueryBuilder &$qb, $entity_name, array $alias, $join_alias, $parent = null, &$deep = 0) {
-        if ($deep < 500) {
+        if ($deep < 50) {
             $childs = $this->em->getClassMetadata($entity_name)->getAssociationMappings();
             foreach ($childs as $key => $child) {
                 if (strtolower($key) != strtolower($parent) && ($parent || (!$parent && $deep == 0))) {
