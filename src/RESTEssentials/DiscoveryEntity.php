@@ -5,7 +5,7 @@ namespace RESTEssentials;
 class DiscoveryEntity {
 
     /**
-     * @var Doctrine\ORM\EntityManager
+     * @var \Doctrine\ORM\EntityManager
      */
     private $em;
     private $entityFolder;
@@ -54,12 +54,13 @@ class DiscoveryEntity {
               // custom datatypes (not mapped for reverse engineering)
               $this->em->getConnection()->getDatabasePlatform()->registerDoctrineTypeMapping('set', 'string');
               $this->em->getConnection()->getDatabasePlatform()->registerDoctrineTypeMapping('enum', 'string');
-             */
+             */            
 
             $driver = new \Doctrine\ORM\Mapping\Driver\DatabaseDriver(
                     $this->em->getConnection()->getSchemaManager()
             );
             $driver->setNamespace($this->namespace);
+            $driver->setBiDirecionalEntities(true);
             $this->em->getConfiguration()->setMetadataDriverImpl($driver);
             $cmf = new \Doctrine\ORM\Tools\DisconnectedClassMetadataFactory($this->em);
             $cmf->setEntityManager($this->em);
@@ -78,7 +79,7 @@ class DiscoveryEntity {
     }
 
     private function EntityGenerator($metadata) {
-        $generator = new \Doctrine\ORM\Tools\EntityGenerator();
+        $generator = new \Doctrine\ORM\Tools\EntityGenerator();        
         $generator->setUpdateEntityIfExists(true);
         $generator->setGenerateStubMethods(true);
         $generator->setGenerateAnnotations(true);
