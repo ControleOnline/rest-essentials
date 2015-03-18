@@ -1,0 +1,629 @@
+<?php
+
+/*
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * This software consists of voluntary contributions made by many individuals
+ * and is licensed under the MIT license. For more information, see
+ * <http://www.doctrine-project.org>.
+ */
+
+namespace RESTEssentials;
+
+use Doctrine\Common\Persistence\Mapping\Driver\MappingDriver;
+use Doctrine\Common\Persistence\Mapping\ClassMetadata;
+use Doctrine\Common\Util\Inflector;
+use Doctrine\DBAL\Schema\AbstractSchemaManager;
+use Doctrine\DBAL\Schema\SchemaException;
+use Doctrine\DBAL\Schema\Table;
+use Doctrine\DBAL\Schema\Column;
+use Doctrine\DBAL\Types\Type;
+use Doctrine\ORM\Mapping\ClassMetadataInfo;
+use Doctrine\ORM\Mapping\MappingException;
+
+/**
+ * The DatabaseDriver reverse engineers the mapping metadata from a database.
+ *
+ * @link    www.doctrine-project.org
+ * @since   2.0
+ * @author  Guilherme Blanco <guilhermeblanco@hotmail.com>
+ * @author  Jonathan Wage <jonwage@gmail.com>
+ * @author  Benjamin Eberlei <kontakt@beberlei.de>
+ */
+class RestDriver implements MappingDriver {
+
+    /**
+     * @var AbstractSchemaManager
+     */
+    private $_sm;
+
+    /**
+     * @var array|null
+     */
+    private $tables = null;
+
+    /**
+     * @var array
+     */
+    private $classToTableNames = array();
+
+    /**
+     * @var array
+     */
+    private $manyToManyTables = array();
+
+    /**
+     * @var array
+     */
+    private $classNamesForTables = array();
+
+    /**
+     * @var array
+     */
+    private $fieldNamesForColumns = array();
+
+    /**
+     * The namespace for the generated entities.
+     *
+     * @var string|null
+     */
+    private $namespace;
+
+    /**
+     * @var boolean
+     */
+    private $biDirecional;
+
+    /**
+     * @param AbstractSchemaManager $schemaManager
+     */
+    public function __construct(AbstractSchemaManager $schemaManager) {
+        $this->_sm = $schemaManager;
+    }
+
+    /**
+     * Set the namespace for the generated entities.
+     *
+     * @param string $namespace
+     *
+     * @return void
+     */
+    public function setNamespace($namespace) {
+        $this->namespace = $namespace;
+    }
+
+    /**
+     * Set the creation of the Entities as bidirectional.
+     *
+     * @param string $biDirecional
+     *
+     * @return void
+     */
+    public function setBiDirecionalEntities($biDirecional = false) {
+        $this->biDirecional = $biDirecional;
+    }
+
+    /**
+     * Get if the creation of the Entities is bidirectional.
+     * @return void
+     */
+    public function isBiDirecionalEntities() {
+        return $this->biDirecional;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function isTransient($className) {
+        return true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getAllClassNames() {
+        $this->reverseEngineerMappingFromDatabase();
+
+        return array_keys($this->classToTableNames);
+    }
+
+    /**
+     * Sets class name for a table.
+     *
+     * @param string $tableName
+     * @param string $className
+     *
+     * @return void
+     */
+    public function setClassNameForTable($tableName, $className) {
+        $this->classNamesForTables[$tableName] = $className;
+    }
+
+    /**
+     * Sets field name for a column on a specific table.
+     *
+     * @param string $tableName
+     * @param string $columnName
+     * @param string $fieldName
+     *
+     * @return void
+     */
+    public function setFieldNameForColumn($tableName, $columnName, $fieldName) {
+        $this->fieldNamesForColumns[$tableName][$columnName] = $fieldName;
+    }
+
+    /**
+     * Sets tables manually instead of relying on the reverse engineering capabilities of SchemaManager.
+     *
+     * @param array $entityTables
+     * @param array $manyToManyTables
+     *
+     * @return void
+     */
+    public function setTables($entityTables, $manyToManyTables) {
+        $this->tables = $this->manyToManyTables = $this->classToTableNames = array();
+
+        foreach ($entityTables as $table) {
+            $className = $this->getClassNameForTable($table->getName());
+
+            $this->classToTableNames[$className] = $table->getName();
+            $this->tables[$table->getName()] = $table;
+        }
+
+        foreach ($manyToManyTables as $table) {
+            $this->manyToManyTables[$table->getName()] = $table;
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function loadMetadataForClass($className, ClassMetadata $metadata) {
+        $this->reverseEngineerMappingFromDatabase();
+
+        if (!isset($this->classToTableNames[$className])) {
+            throw new \InvalidArgumentException("Unknown class " . $className);
+        }
+
+        $tableName = $this->classToTableNames[$className];
+
+        $metadata->name = $className;
+        $metadata->table['name'] = $tableName;
+
+        $this->buildIndexes($metadata);
+        $this->buildFieldMappings($metadata);
+        if (true === $this->isBiDirecionalEntities()) {
+            $this->buildBiDirecionalToOneAssociationMappings($metadata);
+        } else {
+            $this->buildToOneAssociationMappings($metadata);
+        }
+
+        foreach ($this->manyToManyTables as $manyTable) {
+            foreach ($manyTable->getForeignKeys() as $foreignKey) {
+                // foreign key maps to the table of the current entity, many to many association probably exists
+                if (!(strtolower($tableName) === strtolower($foreignKey->getForeignTableName()))) {
+                    continue;
+                }
+
+                $myFk = $foreignKey;
+                $otherFk = null;
+
+                foreach ($manyTable->getForeignKeys() as $foreignKey) {
+                    if ($foreignKey != $myFk) {
+                        $otherFk = $foreignKey;
+                        break;
+                    }
+                }
+
+                if (!$otherFk) {
+                    // the definition of this many to many table does not contain
+                    // enough foreign key information to continue reverse engineering.
+                    continue;
+                }
+
+                $localColumn = current($myFk->getColumns());
+
+                $associationMapping = array();
+                $associationMapping['fieldName'] = $this->getFieldNameForColumn($manyTable->getName(), current($otherFk->getColumns()), true);
+                $associationMapping['targetEntity'] = $this->getClassNameForTable($otherFk->getForeignTableName());
+
+                if (current($manyTable->getColumns())->getName() == $localColumn) {
+                    $associationMapping['inversedBy'] = $this->getFieldNameForColumn($manyTable->getName(), current($myFk->getColumns()), true);
+                    $associationMapping['joinTable'] = array(
+                        'name' => strtolower($manyTable->getName()),
+                        'joinColumns' => array(),
+                        'inverseJoinColumns' => array(),
+                    );
+
+                    $fkCols = $myFk->getForeignColumns();
+                    $cols = $myFk->getColumns();
+
+                    for ($i = 0; $i < count($cols); $i++) {
+                        $associationMapping['joinTable']['joinColumns'][] = array(
+                            'name' => $cols[$i],
+                            'referencedColumnName' => $fkCols[$i],
+                        );
+                    }
+
+                    $fkCols = $otherFk->getForeignColumns();
+                    $cols = $otherFk->getColumns();
+
+                    for ($i = 0; $i < count($cols); $i++) {
+                        $associationMapping['joinTable']['inverseJoinColumns'][] = array(
+                            'name' => $cols[$i],
+                            'referencedColumnName' => $fkCols[$i],
+                        );
+                    }
+                } else {
+                    $associationMapping['mappedBy'] = $this->getFieldNameForColumn($manyTable->getName(), current($myFk->getColumns()), true);
+                }
+
+                $metadata->mapManyToMany($associationMapping);
+
+                break;
+            }
+        }
+    }
+
+    /**
+     * @return void
+     *
+     * @throws \Doctrine\ORM\Mapping\MappingException
+     */
+    private function reverseEngineerMappingFromDatabase() {
+        if ($this->tables !== null) {
+            return;
+        }
+
+        $tables = array();
+
+        foreach ($this->_sm->listTableNames() as $tableName) {
+            $tables[$tableName] = $this->_sm->listTableDetails($tableName);
+        }
+
+        $this->tables = $this->manyToManyTables = $this->classToTableNames = array();
+
+        foreach ($tables as $tableName => $table) {
+            $foreignKeys = ($this->_sm->getDatabasePlatform()->supportsForeignKeyConstraints()) ? $table->getForeignKeys() : array();
+
+            $allForeignKeyColumns = array();
+
+            foreach ($foreignKeys as $foreignKey) {
+                $allForeignKeyColumns = array_merge($allForeignKeyColumns, $foreignKey->getLocalColumns());
+            }
+
+            if (!$table->hasPrimaryKey()) {
+                throw new MappingException(
+                "Table " . $table->getName() . " has no primary key. Doctrine does not " .
+                "support reverse engineering from tables that don't have a primary key."
+                );
+            }
+
+            $pkColumns = $table->getPrimaryKey()->getColumns();
+
+            sort($pkColumns);
+            sort($allForeignKeyColumns);
+
+            if ($pkColumns == $allForeignKeyColumns && count($foreignKeys) == 2) {
+                $this->manyToManyTables[$tableName] = $table;
+            } else {
+                // lower-casing is necessary because of Oracle Uppercase Tablenames,
+                // assumption is lower-case + underscore separated.
+                $className = $this->getClassNameForTable($tableName);
+
+                $this->tables[$tableName] = $table;
+                $this->classToTableNames[$className] = $tableName;
+            }
+        }
+    }
+
+    /**
+     * Build indexes from a class metadata.
+     *
+     * @param \Doctrine\ORM\Mapping\ClassMetadataInfo $metadata
+     */
+    private function buildIndexes(ClassMetadataInfo $metadata) {
+        $tableName = $metadata->table['name'];
+        $indexes = $this->tables[$tableName]->getIndexes();
+
+        foreach ($indexes as $index) {
+            if ($index->isPrimary()) {
+                continue;
+            }
+
+            $indexName = $index->getName();
+            $indexColumns = $index->getColumns();
+            $constraintType = $index->isUnique() ? 'uniqueConstraints' : 'indexes';
+
+            $metadata->table[$constraintType][$indexName]['columns'] = $indexColumns;
+        }
+    }
+
+    /**
+     * Build field mapping from class metadata.
+     *
+     * @param \Doctrine\ORM\Mapping\ClassMetadataInfo $metadata
+     */
+    private function buildFieldMappings(ClassMetadataInfo $metadata) {
+        $tableName = $metadata->table['name'];
+        $columns = $this->tables[$tableName]->getColumns();
+        $primaryKeys = $this->getTablePrimaryKeys($this->tables[$tableName]);
+        $foreignKeys = $this->getTableForeignKeys($this->tables[$tableName]);
+        $allForeignKeys = array();
+
+        foreach ($foreignKeys as $foreignKey) {
+            $allForeignKeys = array_merge($allForeignKeys, $foreignKey->getLocalColumns());
+        }
+
+        $ids = array();
+        $fieldMappings = array();
+
+        foreach ($columns as $column) {
+            if (in_array($column->getName(), $allForeignKeys)) {
+                continue;
+            }
+
+            $fieldMapping = $this->buildFieldMapping($tableName, $column);
+
+            if ($primaryKeys && in_array($column->getName(), $primaryKeys)) {
+                $fieldMapping['id'] = true;
+                $ids[] = $fieldMapping;
+            }
+
+            $fieldMappings[] = $fieldMapping;
+        }
+
+        // We need to check for the columns here, because we might have associations as id as well.
+        if ($ids && count($primaryKeys) == 1) {
+            $metadata->setIdGeneratorType(ClassMetadataInfo::GENERATOR_TYPE_AUTO);
+        }
+
+        foreach ($fieldMappings as $fieldMapping) {
+            $metadata->mapField($fieldMapping);
+        }
+    }
+
+    /**
+     * Build field mapping from a schema column definition
+     *
+     * @param string                       $tableName
+     * @param \Doctrine\DBAL\Schema\Column $column
+     *
+     * @return array
+     */
+    private function buildFieldMapping($tableName, Column $column) {
+        $fieldMapping = array(
+            'fieldName' => $this->getFieldNameForColumn($tableName, $column->getName(), false),
+            'columnName' => $column->getName(),
+            'type' => $column->getType()->getName(),
+            'nullable' => (!$column->getNotNull()),
+        );
+
+        // Type specific elements
+        switch ($fieldMapping['type']) {
+            case Type::TARRAY:
+            case Type::BLOB:
+            case Type::GUID:
+            case Type::JSON_ARRAY:
+            case Type::OBJECT:
+            case Type::SIMPLE_ARRAY:
+            case Type::STRING:
+            case Type::TEXT:
+                $fieldMapping['length'] = $column->getLength();
+                $fieldMapping['options']['fixed'] = $column->getFixed();
+                break;
+
+            case Type::DECIMAL:
+            case Type::FLOAT:
+                $fieldMapping['precision'] = $column->getPrecision();
+                $fieldMapping['scale'] = $column->getScale();
+                break;
+
+            case Type::INTEGER:
+            case Type::BIGINT:
+            case Type::SMALLINT:
+                $fieldMapping['options']['unsigned'] = $column->getUnsigned();
+                break;
+        }
+
+        // Comment
+        if (($comment = $column->getComment()) !== null) {
+            $fieldMapping['options']['comment'] = $comment;
+        }
+
+        // Default
+        if (($default = $column->getDefault()) !== null) {
+            $fieldMapping['options']['default'] = $default;
+        }
+
+        return $fieldMapping;
+    }
+
+    /**
+     * Build to one (one to one, many to one) association mapping from class metadata with bi-direcional entities
+     *
+     * @param \Doctrine\ORM\Mapping\ClassMetadataInfo $metadata
+     */
+    private function buildBiDirecionalToOneAssociationMappings(ClassMetadataInfo $metadata) {
+        $tableName = $metadata->table['name'];
+        $foreignKeys = $this->getTableForeignKeys($this->tables[$tableName]);
+
+        foreach ($foreignKeys as $foreignKey) {
+            $foreignTable = $foreignKey->getForeignTableName();
+            $cols = $foreignKey->getColumns();
+            $fkCols = $foreignKey->getForeignColumns();
+
+            $localColumn = current($cols);
+            $associationMapping = array();
+            $associationMapping['fieldName'] = $this->getFieldNameForColumn($tableName, $localColumn, true);
+            $associationMapping['targetEntity'] = $this->getClassNameForTable($foreignTable);
+
+            for ($i = 0; $i < count($cols); $i++) {
+                $associationMapping['joinColumns'][] = array(
+                    'name' => $cols[$i],
+                    'referencedColumnName' => $fkCols[$i],
+                );
+            }
+            $metadata->mapManyToOne($associationMapping);
+        }
+
+        foreach ($this->tables as $tableCandidate) {
+            if ($this->_sm->getDatabasePlatform()->supportsForeignKeyConstraints()) {
+                $foreignKeysCandidate = $tableCandidate->getForeignKeys();
+            } else {
+                $foreignKeysCandidate = array();
+            }
+
+            foreach ($foreignKeysCandidate as $foreignKey) {
+                $foreignTable = $foreignKey->getForeignTableName();
+
+                if ($foreignTable == $tableName && !isset($this->manyToManyTables[$tableCandidate->getName()])) {
+
+                    $fkCols = $foreignKey->getForeignColumns();
+                    $cols = $foreignKey->getColumns();
+
+
+                    $localColumn = current($cols);
+
+                    $associationMapping = array();
+                    $associationMapping['fieldName'] = $this->getFieldNameForColumn($tableCandidate->getName(), $tableCandidate->getName(), true);
+                    $associationMapping['targetEntity'] = $this->getClassNameForTable($tableCandidate->getName());
+                    $associationMapping['mappedBy'] = $this->getFieldNameForColumn($tableCandidate->getName(), $localColumn, true);
+
+                    try {
+                        $primaryKeyColumns = $tableCandidate->getPrimaryKey()->getColumns();
+                        if (count($primaryKeyColumns) == 1) {
+                            $indexColumn = current($primaryKeyColumns);
+                            $associationMapping['indexBy'] = $indexColumn;
+                        }
+                    } catch (SchemaException $e) {
+                        
+                    }
+
+                    $metadata->mapOneToMany($associationMapping);
+                }
+            }
+        }
+    }
+
+    /**
+     * Build to one (one to one, many to one) association mapping from class metadata.
+     *
+     * @param \Doctrine\ORM\Mapping\ClassMetadataInfo $metadata
+     */
+    private function buildToOneAssociationMappings(ClassMetadataInfo $metadata) {
+        $tableName = $metadata->table['name'];
+        $primaryKeys = $this->getTablePrimaryKeys($this->tables[$tableName]);
+        $foreignKeys = $this->getTableForeignKeys($this->tables[$tableName]);
+
+        foreach ($foreignKeys as $foreignKey) {
+            $foreignTableName = $foreignKey->getForeignTableName();
+            $fkColumns = $foreignKey->getColumns();
+            $fkForeignColumns = $foreignKey->getForeignColumns();
+            $localColumn = current($fkColumns);
+            $associationMapping = array(
+                'fieldName' => $this->getFieldNameForColumn($tableName, $localColumn, true),
+                'targetEntity' => $this->getClassNameForTable($foreignTableName),
+            );
+
+            if (isset($metadata->fieldMappings[$associationMapping['fieldName']])) {
+                $associationMapping['fieldName'] .= '2'; // "foo" => "foo2"
+            }
+
+            if ($primaryKeys && in_array($localColumn, $primaryKeys)) {
+                $associationMapping['id'] = true;
+            }
+
+            for ($i = 0; $i < count($fkColumns); $i++) {
+                $associationMapping['joinColumns'][] = array(
+                    'name' => $fkColumns[$i],
+                    'referencedColumnName' => $fkForeignColumns[$i],
+                );
+            }
+
+            // Here we need to check if $fkColumns are the same as $primaryKeys
+            if (!array_diff($fkColumns, $primaryKeys)) {
+                $metadata->mapOneToOne($associationMapping);
+            } else {
+                $metadata->mapManyToOne($associationMapping);
+            }
+        }
+    }
+
+    /**
+     * Retreive schema table definition foreign keys.
+     *
+     * @param \Doctrine\DBAL\Schema\Table $table
+     *
+     * @return array
+     */
+    private function getTableForeignKeys(Table $table) {
+        return ($this->_sm->getDatabasePlatform()->supportsForeignKeyConstraints()) ? $table->getForeignKeys() : array();
+    }
+
+    /**
+     * Retreive schema table definition primary keys.
+     *
+     * @param \Doctrine\DBAL\Schema\Table $table
+     *
+     * @return array
+     */
+    private function getTablePrimaryKeys(Table $table) {
+        try {
+            return $table->getPrimaryKey()->getColumns();
+        } catch (SchemaException $e) {
+            // Do nothing
+        }
+
+        return array();
+    }
+
+    /**
+     * Returns the mapped class name for a table if it exists. Otherwise return "classified" version.
+     *
+     * @param string $tableName
+     *
+     * @return string
+     */
+    private function getClassNameForTable($tableName) {
+        if (isset($this->classNamesForTables[$tableName])) {
+            return $this->namespace . $this->classNamesForTables[$tableName];
+        }
+
+        return $this->namespace . Inflector::classify(strtolower($tableName));
+    }
+
+    /**
+     * Return the mapped field name for a column, if it exists. Otherwise return camelized version.
+     *
+     * @param string  $tableName
+     * @param string  $columnName
+     * @param boolean $fk Whether the column is a foreignkey or not.
+     *
+     * @return string
+     */
+    private function getFieldNameForColumn($tableName, $columnName, $fk = false) {
+        if (isset($this->fieldNamesForColumns[$tableName]) && isset($this->fieldNamesForColumns[$tableName][$columnName])) {
+            return $this->fieldNamesForColumns[$tableName][$columnName];
+        }
+
+        $columnName = strtolower($columnName);
+
+        // Replace _id if it is a foreignkey column
+        if ($fk) {
+            $columnName = str_replace('_id', '', $columnName);
+        }
+        return Inflector::camelize($columnName);
+    }
+
+}
