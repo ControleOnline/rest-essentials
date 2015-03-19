@@ -88,7 +88,7 @@ class DefaultController extends \Zend\Mvc\Controller\AbstractActionController {
             $data = $this->_model->discovery($this->_entity_children, $this->_entity);
             $return = array(
                 'data' => $data,
-                'count' => isset($data[strtolower($this->_entity)][0][strtolower($this->_entity_children)]) ? count($data[strtolower($this->_entity)][0][strtolower($this->_entity_children)]) : 0,
+                'count' => isset($data[strtolower($this->_entity_children)]) ? count($data[strtolower($this->_entity_children)]) : 0,
                 'total' => (int) $this->_model->getTotalResults(),
                 'page' => (int) $page
             );
