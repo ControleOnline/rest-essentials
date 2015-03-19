@@ -50,12 +50,12 @@ class DiscoveryEntity {
         if (!is_dir($this->entityFolder)) {
             $this->prepareFolder();
             $this->configure();
-            /*
-              // custom datatypes (not mapped for reverse engineering)
-              $this->em->getConnection()->getDatabasePlatform()->registerDoctrineTypeMapping('set', 'string');
-              $this->em->getConnection()->getDatabasePlatform()->registerDoctrineTypeMapping('enum', 'string');
-             */            
-            
+
+            // custom datatypes (not mapped for reverse engineering)
+            $this->em->getConnection()->getDatabasePlatform()->registerDoctrineTypeMapping('set', 'string');
+            $this->em->getConnection()->getDatabasePlatform()->registerDoctrineTypeMapping('enum', 'string');
+
+
             $driver = new RestDriver(
                     $this->em->getConnection()->getSchemaManager()
             );

@@ -18,6 +18,9 @@ class DefaultModel {
     private $entity_name;
     private $children_entity_name;
     private $rows;
+    private $alias = [];
+    private $join = [];
+    private $deep = 0;
 
     public function __construct($em) {
         $this->em = $em;
@@ -118,21 +121,21 @@ class DefaultModel {
         return $this->em->getClassMetadata($this->entity_name)->getFieldNames();
     }
 
-    private function getChilds(\Doctrine\ORM\QueryBuilder &$qb, $entity_name, array $alias, $join_alias, $parent = null, &$deep = 0, &$join = array()) {
-        if ($deep < 50) {
+    private function getChilds(\Doctrine\ORM\QueryBuilder &$qb, $entity_name, $join_alias) {
+        if ($this->deep < 50) {
             $childs = $this->em->getClassMetadata($entity_name)->getAssociationMappings();
             foreach ($childs as $key => $child) {
-                if (($parent || (!$parent && $deep == 0)) && $child['targetEntity'] && !in_array($child['targetEntity'], $join)) {
-                    $deep ++;
-                    $join[] = $child['targetEntity'];
+                if ($child['targetEntity'] && !in_array($child['targetEntity'], $this->join)) {
+                    $this->deep ++;
+                    $this->join[] = $child['targetEntity'];
                     $j = $this->generateAlias();
                     $table = strtolower(str_replace('Entity\\', '', $child['targetEntity']));
-                    $alias[] = $j;
-                    $qb->select($alias);
+                    $this->alias[] = $j;
+                    $qb->select($this->alias);
                     $qb->leftJoin($join_alias . '.' . $table, $j);
                     $table_child = $this->em->getClassMetadata('Entity\\' . ucfirst($table))->getAssociationMappings();
                     foreach ($table_child as $k => $p) {
-                        $this->getChilds($qb, 'Entity\\' . ucfirst($table), $alias, $j, 'Entity\\' . ucfirst($k), $deep, $join);
+                        $this->getChilds($qb, 'Entity\\' . ucfirst($table), $j);
                     }
                 }
             }
@@ -148,15 +151,19 @@ class DefaultModel {
         $data = [];
         $this->children_entity_name = $this->entity_name;
         $this->entity_name = $entity_parent;
+        $alias = $this->generateAlias();
         $alias_parent = $this->generateAlias();
-        $qb = $this->em->getRepository('Entity\\' . ucfirst($entity_parent))->createQueryBuilder($alias_parent)->select($alias_parent);
-        $join = array('Entity\\' . ucfirst($entity_parent));
-        $deep = 0;
-        $this->getChilds($qb, 'Entity\\' . ucfirst($this->entity_name), array($alias_parent), $alias_parent, null, $deep, $join);
+        $qb = $this->entity->createQueryBuilder($alias)->select($alias);
+        $this->join[] = $this->children_entity_name;
+        $this->alias[] = $alias;
+        $this->alias[] = $alias_parent;
+        $qb->select(array($alias, $alias_parent));
+        $qb->leftJoin($alias . '.' . strtolower($this->entity_name), $alias_parent);
+        $this->getChilds($qb, $this->children_entity_name, $alias);
         $qb->where($alias_parent . '.id=' . $id);
         $query = $qb->setFirstResult($limit * ($page - 1))->setMaxResults($limit)->getQuery();
         $paginator = new Paginator($query);
-        $data[strtolower($this->entity_name)] = $query->getArrayResult();
+        $data[strtolower(str_replace('Entity\\', '', $this->children_entity_name))] = $query->getArrayResult();
         $this->rows = $paginator->count();
         return $data;
     }
@@ -165,13 +172,12 @@ class DefaultModel {
         $data = [];
         $alias = $this->generateAlias();
         $qb = $this->entity->createQueryBuilder($alias)->select($alias);
-        $join = array($this->entity_name);
-        $deep = 0;
+        $this->join[] = $this->entity_name;
+        $this->alias[] = $alias;
         if ($id) {
             $qb->where($alias . '.id=' . $id);
         }
-        $this->getChilds($qb, $this->entity_name, array($alias), $alias, null, $deep, $join);
-
+        $this->getChilds($qb, $this->entity_name, $alias);
         $query = $qb->getQuery()->setFirstResult($limit * ($page - 1))->setMaxResults($limit);
         $data[strtolower(str_replace('Entity\\', '', $this->entity_name))] = $query->getArrayResult();
         $paginator = new Paginator($query);
