@@ -132,5 +132,5 @@ http://localhost/<Entity>.json?page=2&limit=100 //Return second page limited by 
 #### Override methods ####
 If the browser does not support PUT, DELETE and OPTIONS use :
 ```
-http://localhost/<Entity>.json?method=PUT //Return second page limited by 100 records
+http://localhost/<Entity>.json?method=PUT //Override method PUT for Browser Compatibility
 ```

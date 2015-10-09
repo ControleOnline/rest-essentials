@@ -88,7 +88,7 @@ class DefaultController extends \Zend\Mvc\Controller\AbstractActionController {
             $data = $this->_model->discovery($this->_entity_children, $this->_entity);
             $return = array(
                 'data' => $data,
-                'count' => isset($data[strtolower($this->_entity_children)]) ? count($data[strtolower($this->_entity_children)]) : 0,
+                'count' => isset($data[strtolower($this->_entity)][0][strtolower($this->_entity_children)]) ? count($data[strtolower($this->_entity)][0][strtolower($this->_entity_children)]) : 0,
                 'total' => (int) $this->_model->getTotalResults(),
                 'page' => (int) $page
             );
@@ -128,25 +128,25 @@ class DefaultController extends \Zend\Mvc\Controller\AbstractActionController {
 
     public function indexAction() {
         $this->initialize();
-        $return = [];
+        $return = array('response' => []);
         try {
             switch ($this->_method) {
                 case 'FORM':
                     $this->_view->setTerminal(true);
-                    $return = $this->getForm();
+                    $return['response'] = $this->getForm();
                     break;
                 case 'DELETE':
                 case 'PUT':
-                    $return = $this->alterData();
+                    $return['response'] = $this->alterData();
                 case 'POST':
-                    $return = $this->insertData();
+                    $return['response'] = $this->insertData();
                 case 'GET':
-                    $return = $this->getData();
+                    $return['response'] = $this->getData();
             }
-            $return['method'] = $this->_method;
-            $return['success'] = isset($return['success']) ? $return['success'] : true;
+            $return['response']['method'] = $this->_method;
+            $return['response']['success'] = isset($return['success']) ? $return['success'] : true;
         } catch (\Exception $e) {
-            $return = array('error' => array('code' => $e->getCode(), 'message' => $e->getMessage(),), 'success' => false);
+            $return = array('response' => array('error' => array('code' => $e->getCode(), 'message' => $e->getMessage()), 'success' => false));
         }
         $this->_view->setVariables($return);
         return $this->_view;
