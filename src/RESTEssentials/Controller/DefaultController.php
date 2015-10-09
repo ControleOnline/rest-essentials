@@ -47,6 +47,7 @@ class DefaultController extends \Zend\Mvc\Controller\AbstractActionController {
         $return = [];
         $id = $this->params()->fromQuery('id');
         $this->_model->setMethod('FORM');
+        $this->_view->setTerminal(true);
         if ($this->_entity) {
             $return['form'] = $this->_model->discovery($this->_entity);
         }
@@ -132,8 +133,7 @@ class DefaultController extends \Zend\Mvc\Controller\AbstractActionController {
         try {
             switch ($this->_method) {
                 case 'FORM':
-                    $this->_view->setTerminal(true);
-                    $return['response'] = $this->getForm();
+                    $return = $this->getForm();
                     break;
                 case 'DELETE':
                 case 'PUT':
