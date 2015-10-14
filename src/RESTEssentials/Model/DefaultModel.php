@@ -41,7 +41,7 @@ class DefaultModel {
         return $cmf->getMetadataFor($this->entity_name);
     }
 
-    public function form($entity) {
+    public function form($entity, $params = false) {
         $return = [];
         $return['form_name'] = strtolower($entity);
         $metadata = $this->getMetadata();
@@ -52,6 +52,8 @@ class DefaultModel {
         if ($assoc) {
             $return['assoc'] = $assoc;
         }
+        $data = isset($params['id']) ? $this->get($params['id']) : null;
+        $return['data'] = isset($data[strtolower($entity)]) ? $data[strtolower($entity)][0] : null;
         return $return;
     }
 

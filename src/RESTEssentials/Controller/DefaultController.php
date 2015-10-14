@@ -12,7 +12,9 @@ class DefaultController extends \Zend\Mvc\Controller\AbstractActionController {
      */
     protected $_em;
     protected $_allowed_methods = array('GET', 'POST', 'PUT', 'DELETE', 'FORM');
+    protected $_allowed_viewMethods = array('json', 'html', 'form');
     protected $_method;
+    protected $_viewMethod;
     protected $_model;
     protected $_view;
     protected $_entity_children;
@@ -20,8 +22,10 @@ class DefaultController extends \Zend\Mvc\Controller\AbstractActionController {
 
     private function initialize() {
         $method_request = strtoupper($this->params()->fromQuery('method') ? : filter_input(INPUT_SERVER, 'REQUEST_METHOD'));
+        $viewMethod_request = strtolower($this->params()->fromQuery('viewMethod'));
         $this->_method = in_array($method_request, $this->_allowed_methods) ? $method_request : 'GET';
-        $this->_model = new DiscoveryModel($this->getEntityManager(), $this->_method, $this->getRequest());
+        $this->_viewMethod = in_array($viewMethod_request, $this->_allowed_viewMethods) ? $viewMethod_request : 'html';
+        $this->_model = new DiscoveryModel($this->getEntityManager(), $this->_method, $this->_viewMethod, $this->getRequest());
         $this->_view = new ViewModel();
         $this->_entity_children = $this->params('entity_children');
         $this->_entity = $this->params('entity');
@@ -46,17 +50,17 @@ class DefaultController extends \Zend\Mvc\Controller\AbstractActionController {
     private function getForm() {
         $return = [];
         $id = $this->params()->fromQuery('id');
-        $this->_model->setMethod('FORM');
+        $this->_model->setViewMethod('form');
         $this->_view->setTerminal(true);
         if ($this->_entity) {
-            $return['form'] = $this->_model->discovery($this->_entity);
+            $return = $this->_model->discovery($this->_entity);
         }
         if ($this->_entity_children) {
-            $return['form']['id'] = $id;
-            $return['form']['children'] = $this->_model->discovery($this->_entity_children, $this->_entity);
+            $return['id'] = $id;
+            $return['children'] = $this->_model->discovery($this->_entity_children, $this->_entity);
         }
-        $return['form']['method'] = $id ? 'PUT' : 'POST';
-        $return['form']['action'] = $this->getRequest()->getUri();
+        $return['method'] = $id ? 'PUT' : 'POST';
+        $return['action'] = $this->getRequest()->getUri();
         return $return;
     }
 
@@ -132,18 +136,24 @@ class DefaultController extends \Zend\Mvc\Controller\AbstractActionController {
         $return = array('response' => []);
         try {
             switch ($this->_method) {
-                case 'FORM':
-                    $return = $this->getForm();
-                    break;
                 case 'DELETE':
                 case 'PUT':
-                    $return['response'] = $this->alterData();
+                    $return['response'] = ($this->_viewMethod == 'form') ? [] : $this->alterData();
                 case 'POST':
-                    $return['response'] = $this->insertData();
+                    $return['response'] = ($this->_viewMethod == 'form') ? [] : $this->insertData();
                 case 'GET':
-                    $return['response'] = $this->getData();
+                    $return['response'] = ($this->_viewMethod == 'form') ? [] : $this->getData();
             }
+
+            switch ($this->_viewMethod) {
+                case 'form':
+                    $return['response']['form'] = $this->getForm();
+                    break;
+            }
+
             $return['response']['method'] = $this->_method;
+            $return['response']['view_method'] = $this->_viewMethod;
+
             $return['response']['success'] = isset($return['success']) ? $return['success'] : true;
         } catch (\Exception $e) {
             $return = array('response' => array('error' => array('code' => $e->getCode(), 'message' => $e->getMessage()), 'success' => false));

@@ -37,11 +37,18 @@ class DiscoveryRoute {
         }
     }
 
-    public function setMethod(Request $request, $uri) {                
+    public function setMethod(Request $request, $uri) {
         $compare = '.form';
-        $method = substr_compare($uri, $compare, strlen($uri) - strlen($compare), strlen($compare)) === 0;        
-        $method_request = $request->getQuery()->get('method') ? : $method ? 'FORM' : null;
-        $request->getQuery()->set('method', strtoupper($method_request? : $_SERVER['REQUEST_METHOD']));
+        $method = substr_compare($uri, $compare, strlen($uri) - strlen($compare), strlen($compare)) === 0;
+        $is_form = $method ? 'form' : null;
+
+
+        $compare = '.json';
+        $method = substr_compare($uri, $compare, strlen($uri) - strlen($compare), strlen($compare)) === 0;
+        $is_json = $method ? 'json' : null;
+
+        $request->getQuery()->set('viewMethod', strtolower($is_form? : $is_json? : 'html'));
+        $request->getQuery()->set('method', strtoupper($request->getQuery()->get('method')? : $request->getPost()->get('method')? : $_SERVER['REQUEST_METHOD']));
     }
 
     protected function formatClass($class, $type, $module = null) {

@@ -10,11 +10,13 @@ class DiscoveryModel {
     private $em;
     private $params;
     private $method;
+    private $viewMethod;
     private $rows;
 
-    public function __construct($em, $method, $params) {
+    public function __construct($em, $method, $viewMethod, $params) {
         $this->setEntityManager($em);
         $this->setMethod($method);
+        $this->setViewMethod($viewMethod);
         $this->setParams($this->prepareParams($params, $method));
     }
 
@@ -31,8 +33,18 @@ class DiscoveryModel {
         return $this->params;
     }
 
+    public function getViewMethod() {
+        return $this->viewMethod;
+    }
+
+    public function setViewMethod($viewMethod) {
+        $this->viewMethod = $viewMethod;
+        return $this;
+    }
+
     public function setParams(array $params) {
         $this->params = $params;
+        return $this;
     }
 
     public function getMethod() {
@@ -41,10 +53,12 @@ class DiscoveryModel {
 
     public function setMethod($method) {
         $this->method = $method;
+        return $this;
     }
 
     public function setEntityManager(\Doctrine\ORM\EntityManager $em) {
         $this->em = $em;
+        return $this;
     }
 
     public function prepareParams(\Zend\Http\PhpEnvironment\Request $params, $method = 'GET') {
@@ -76,9 +90,7 @@ class DiscoveryModel {
         $default_model->setEntity('Entity\\' . $entity);
 
         switch ($this->getMethod()) {
-            case 'FORM':
-                $data = $default_model->form($entity,$entity_parent);
-                break;
+
             case 'POST':
                 $data = $default_model->insert($this->params);
                 break;
@@ -89,17 +101,25 @@ class DiscoveryModel {
                 $data = $default_model->delete($this->params['id']);
                 break;
             default:
-                $id = isset($this->params['id']) ? $this->params['id'] : null;
-                $page = isset($this->params['page']) ? $this->params['page'] : 1;
-                $limit = isset($this->params['limit']) ? $this->params['limit'] : 100;
-                if ($entity_parent) {
-                    $data = $default_model->getWithParent($id, $entity_parent, $page, $limit);
-                } else {
-                    $data = $default_model->get($id, $page, $limit);
+                if ($this->getViewMethod() != 'form') {
+                    $id = isset($this->params['id']) ? $this->params['id'] : null;
+                    $page = isset($this->params['page']) ? $this->params['page'] : 1;
+                    $limit = isset($this->params['limit']) ? $this->params['limit'] : 100;
+                    if ($entity_parent) {
+                        $data = $default_model->getWithParent($id, $entity_parent, $page, $limit);
+                    } else {
+                        $data = $default_model->get($id, $page, $limit);
+                    }
+                    $this->rows = $default_model->getTotalResults();
                 }
-                $this->rows = $default_model->getTotalResults();
                 break;
         }
+        switch ($this->getViewMethod()) {
+            case 'form':
+                $data = $default_model->form($entity, $this->params);
+                break;
+        }
+
         return $data;
     }
 
