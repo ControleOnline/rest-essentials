@@ -19,15 +19,19 @@
         <form action="<?= $this->response['form']['action'] ?>" method="POST" name="form-<?= $this->response['form']['form_name'] ?>" role="form">
             <input name="method" value="<?= $this->response['form']['method'] ?>" type="hidden">         
             <?php foreach ($this->response['form']['fields'] as $key => $fields): ?>
-                <div class="form-group">
-                    <label id="label-<?= $key ?>" for="input-<?= $key ?>"><?= ucfirst($key) ?>: </label>
-                    <input value="<?= (isset($this->response['form']['data']) && isset($this->response['form']['data'][strtolower($key)])) ? $this->response['form']['data'][strtolower($key)] : null ?>" id="input-<?= $key ?>" name="<?= $key ?>" type="text" data-propreties='<?= json_encode($fields) ?>' placeholder="Enter <?= ucfirst($key) ?>">
-                </div>
+                <?php if ($key == 'id') { ?>
+                    <input value="<?= (isset($this->response['form']['data']) && isset($this->response['form']['data'][strtolower($key)])) ? $this->response['form']['data'][strtolower($key)] : null ?>" id="input-<?= $key ?>" name="<?= $key ?>" type="hidden" data-propreties='<?= json_encode($fields) ?>' placeholder="Enter <?= ucfirst($key) ?>">
+                <?php } else { ?>
+                    <div class="form-group">
+                        <label id="label-<?= $key ?>" for="input-<?= $key ?>"><?= ucfirst($key) ?>: </label>
+                        <input value="<?= (isset($this->response['form']['data']) && isset($this->response['form']['data'][strtolower($key)])) ? $this->response['form']['data'][strtolower($key)] : null ?>" id="input-<?= $key ?>" name="<?= $key ?>" type="text" data-propreties='<?= json_encode($fields) ?>' placeholder="Enter <?= ucfirst($key) ?>">
+                    </div>
+                <?php } ?>
             <?php endforeach ?>        
             <button type="submit" class="btn btn-default">Submit</button>        
         </form>
     <?php endif; ?>
-<?php }else { ?>
+<?php } else { ?>
     <pre>
         <?php
         print_r($this->response);

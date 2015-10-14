@@ -8,7 +8,7 @@ class DiscoveryModel {
      * @var \Doctrine\ORM\EntityManager
      */
     private $em;
-    private $params;
+    private $params = [];
     private $method;
     private $viewMethod;
     private $rows;
@@ -27,6 +27,14 @@ class DiscoveryModel {
      */
     public function getEntityManager() {
         return $this->em;
+    }
+
+    public function setParam($param, $value) {
+        $this->params[$param] = $value;
+    }
+
+    public function getParam($param) {
+        return $this->params[$param];
     }
 
     public function getParams() {
@@ -84,40 +92,43 @@ class DiscoveryModel {
         return $this->rows;
     }
 
-    public function discovery($entity, $entity_parent = null) {
+    public function discovery($entity, $entity_parent = null, $from_form = false) {
 
         $default_model = new Model\DefaultModel($this->getEntityManager());
         $default_model->setEntity('Entity\\' . $entity);
 
-        switch ($this->getMethod()) {
+        if (!$from_form) {
+            switch ($this->getMethod()) {
 
-            case 'POST':
-                $data = $default_model->insert($this->params);
-                break;
-            case 'PUT':
-                $data = $default_model->edit($this->params);
-                break;
-            case 'DELETE':
-                $data = $default_model->delete($this->params['id']);
-                break;
-            default:
-                if ($this->getViewMethod() != 'form') {
-                    $id = isset($this->params['id']) ? $this->params['id'] : null;
-                    $page = isset($this->params['page']) ? $this->params['page'] : 1;
-                    $limit = isset($this->params['limit']) ? $this->params['limit'] : 100;
-                    if ($entity_parent) {
-                        $data = $default_model->getWithParent($id, $entity_parent, $page, $limit);
-                    } else {
-                        $data = $default_model->get($id, $page, $limit);
+                case 'POST':
+                    $data = $default_model->insert($this->params);
+                    break;
+                case 'PUT':
+                    $data = $default_model->edit($this->params);
+                    break;
+                case 'DELETE':
+                    $data = $default_model->delete($this->params['id']);
+                    break;
+                default:
+                    if ($this->getViewMethod() != 'form') {
+                        $id = isset($this->params['id']) ? $this->params['id'] : null;
+                        $page = isset($this->params['page']) ? $this->params['page'] : 1;
+                        $limit = isset($this->params['limit']) ? $this->params['limit'] : 100;
+                        if ($entity_parent) {
+                            $data = $default_model->getWithParent($id, $entity_parent, $page, $limit);
+                        } else {
+                            $data = $default_model->get($id, $page, $limit);
+                        }
+                        $this->rows = $default_model->getTotalResults();
                     }
-                    $this->rows = $default_model->getTotalResults();
-                }
-                break;
-        }
-        switch ($this->getViewMethod()) {
-            case 'form':
-                $data = $default_model->form($entity, $this->params);
-                break;
+                    break;
+            }
+        } else {
+            switch ($this->getViewMethod()) {
+                case 'form':
+                    $data = $default_model->form($entity, $this->params);
+                    break;
+            }
         }
 
         return $data;

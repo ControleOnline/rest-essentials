@@ -52,7 +52,7 @@ class DefaultModel {
         if ($assoc) {
             $return['assoc'] = $assoc;
         }
-        $data = isset($params['id']) ? $this->get($params['id']) : null;
+        $data = (isset($params['id']) && $params['id']) ? $this->get($params['id']) : null;
         $return['data'] = isset($data[strtolower($entity)]) ? $data[strtolower($entity)][0] : null;
         return $return;
     }

@@ -47,17 +47,18 @@ class DefaultController extends \Zend\Mvc\Controller\AbstractActionController {
         return $this->_em;
     }
 
-    private function getForm() {
+    private function getForm($entity_id = null) {
         $return = [];
-        $id = $this->params()->fromQuery('id');
+        $id = $entity_id ? : $this->params()->fromQuery('id');
         $this->_model->setViewMethod('form');
+        $this->_model->setParam('id', $id);
         $this->_view->setTerminal(true);
         if ($this->_entity) {
-            $return = $this->_model->discovery($this->_entity);
+            $return = $this->_model->discovery($this->_entity, null, true);
         }
         if ($this->_entity_children) {
             $return['id'] = $id;
-            $return['children'] = $this->_model->discovery($this->_entity_children, $this->_entity);
+            $return['children'] = $this->_model->discovery($this->_entity_children, $this->_entity, true);
         }
         $return['method'] = $id ? 'PUT' : 'POST';
         $return['action'] = $this->getRequest()->getUri();
@@ -133,21 +134,25 @@ class DefaultController extends \Zend\Mvc\Controller\AbstractActionController {
 
     public function indexAction() {
         $this->initialize();
-        $return = array('response' => []);
+
         try {
+            $return = [];
             switch ($this->_method) {
                 case 'DELETE':
                 case 'PUT':
-                    $return['response'] = ($this->_viewMethod == 'form') ? [] : $this->alterData();
+                    $return['response'] = $this->alterData();
+                    break;
                 case 'POST':
-                    $return['response'] = ($this->_viewMethod == 'form') ? [] : $this->insertData();
+                    $return['response'] = $this->insertData();
+                    break;
                 case 'GET':
                     $return['response'] = ($this->_viewMethod == 'form') ? [] : $this->getData();
+                    break;
             }
 
             switch ($this->_viewMethod) {
                 case 'form':
-                    $return['response']['form'] = $this->getForm();
+                    $return['response']['form'] = $this->getForm(isset($return['response']['data']['id']) ? $return['response']['data']['id'] : null);
                     break;
             }
 
