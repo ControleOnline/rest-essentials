@@ -113,9 +113,10 @@ class DefaultController extends \Zend\Mvc\Controller\AbstractActionController {
     private function getAllData() {
         $page = $this->params()->fromQuery('page') ? : 1;
         $data = $this->_model->discovery($this->_entity);
+
         $return = array(
             'data' => $data,
-            'count' => count($data),
+            'count' => count($data[strtolower($this->_entity)]),
             'total' => (int) $this->_model->getTotalResults(),
             'page' => (int) $page
         );
