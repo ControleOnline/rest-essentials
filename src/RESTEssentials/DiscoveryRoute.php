@@ -14,7 +14,7 @@ class DiscoveryRoute {
     protected $_url;
     protected $_defaultRoute;
     protected $_EntityChildren;
-    protected $_sufix = array('.json', '.form');
+    protected $_sufix = array('.json', '.form', '.html');
 
     public function __construct($defaultRoute) {
         $this->setDefaultRoute($defaultRoute);

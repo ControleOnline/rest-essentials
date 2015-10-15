@@ -61,7 +61,6 @@ class DefaultController extends \Zend\Mvc\Controller\AbstractActionController {
             $return['children'] = $this->_model->discovery($this->_entity_children, $this->_entity, true);
         }
         $return['method'] = $id ? 'PUT' : 'POST';
-        $return['action'] = $this->getRequest()->getUri();
         return $return;
     }
 
