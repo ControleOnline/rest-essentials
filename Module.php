@@ -91,17 +91,20 @@ class Module {
     }
 
     public function registerJsonStrategy(\Zend\Mvc\MvcEvent $e) {
-        if ($this->config['jsonStrategy']) {
-            $app = $e->getTarget();
-            $locator = $app->getServiceManager();
-            $view = $locator->get('Zend\View\View');
-            $jsonStrategy = $locator->get('ViewJsonStrategy');
-            $view->getEventManager()->attach($jsonStrategy, 100);
-        }
+        $app = $e->getTarget();
+        $locator = $app->getServiceManager();
+        $view = $locator->get('Zend\View\View');
+        $jsonStrategy = $locator->get('ViewJsonStrategy');
+        $view->getEventManager()->attach($jsonStrategy, 100);
     }
 
     public function getConfig() {
-        return include __DIR__ . '/config/module.config.php';
+        $this->config = $this->getDefaultConfig(
+                (isset($this->config['RESTEssentials']) ? : array())
+        );
+        $config = \Zend\Stdlib\ArrayUtils::merge(array('RESTEssentials' => $this->config), (include __DIR__ . '/config/module.config.php'));
+        $config['doctrine']['driver']['Entity']['paths'][] = $this->config['EntityPath'];
+        return $config;
     }
 
     public function getAutoloaderConfig() {

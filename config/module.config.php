@@ -1,13 +1,6 @@
 <?php
 
-$path = getcwd() . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'cache' . DIRECTORY_SEPARATOR;
-
-
 return array(
-    'RESTEssentials' => array(
-        'EntityPath' => $path,
-        'LogChanges' => true
-    ),
     'controllers' => array(
         'invokables' => array(
             'RESTEssentials\Controller\Default' => 'RESTEssentials\Controller\DefaultController',
@@ -38,8 +31,7 @@ return array(
         'driver' => array(
             'Entity' => array(
                 'class' => 'Doctrine\ORM\Mapping\Driver\AnnotationDriver',
-                'cache' => 'array',
-                'paths' => array($path)
+                'cache' => 'array'
             ),
             'orm_default' => array(
                 'drivers' => array(
