@@ -27,7 +27,7 @@ class Module {
         $config = $this->sm->get('config');
 
         $this->config = $this->getDefaultConfig(
-                (isset($config['RESTEssentials']) ? : array())
+                (isset($config['RESTEssentials']) ? $config['RESTEssentials'] : array())
         );
         $eventManager = $e->getApplication()->getEventManager();
         $moduleRouteListener = new ModuleRouteListener();
@@ -100,7 +100,7 @@ class Module {
 
     public function getConfig() {
         $this->config = $this->getDefaultConfig(
-                (isset($this->config['RESTEssentials']) ? : array())
+                (isset($this->config['RESTEssentials']) ? $config['RESTEssentials'] : array())
         );
         $config = \Zend\Stdlib\ArrayUtils::merge(array('RESTEssentials' => $this->config), (include __DIR__ . '/config/module.config.php'));
         $config['doctrine']['driver']['Entity']['paths'][] = $this->config['EntityPath'];
