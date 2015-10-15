@@ -134,7 +134,6 @@ class DefaultController extends \Zend\Mvc\Controller\AbstractActionController {
 
     public function indexAction() {
         $this->initialize();
-
         try {
             $return = [];
             switch ($this->_method) {
@@ -149,16 +148,13 @@ class DefaultController extends \Zend\Mvc\Controller\AbstractActionController {
                     $return['response'] = ($this->_viewMethod == 'form') ? [] : $this->getData();
                     break;
             }
-
             switch ($this->_viewMethod) {
                 case 'form':
                     $return['response']['form'] = $this->getForm(isset($return['response']['data']['id']) ? $return['response']['data']['id'] : null);
                     break;
             }
-
             $return['response']['method'] = $this->_method;
             $return['response']['view_method'] = $this->_viewMethod;
-
             $return['response']['success'] = isset($return['success']) ? $return['success'] : true;
         } catch (\Exception $e) {
             $return = array('response' => array('error' => array('code' => $e->getCode(), 'message' => $e->getMessage()), 'success' => false));

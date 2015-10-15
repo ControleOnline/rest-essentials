@@ -20,15 +20,26 @@ class DefaultModel {
     private $rows;
     private $alias = [];
     private $join = [];
-    private $deep = 0;
+    private $current_deep = 0;
+    private $max_deep = 1;
 
     public function __construct($em) {
         $this->em = $em;
     }
 
+    public function getMax_deep() {
+        return $this->max_deep;
+    }
+
+    public function setMax_deep($max_deep) {
+        $this->max_deep = $max_deep;
+        return $this;
+    }
+
     public function setEntity($entity) {
         $this->entity = $this->em->getRepository($entity);
         $this->entity_name = $entity;
+        return $this;
     }
 
     public function getEntity() {
@@ -124,11 +135,11 @@ class DefaultModel {
     }
 
     private function getChilds(\Doctrine\ORM\QueryBuilder &$qb, $entity_name, $join_alias) {
-        if ($this->deep < 50) {
+        if ($this->current_deep < $this->max_deep) {
             $childs = $this->em->getClassMetadata($entity_name)->getAssociationMappings();
             foreach ($childs as $key => $child) {
                 if ($child['targetEntity'] && !in_array($child['targetEntity'], $this->join)) {
-                    $this->deep ++;
+                    $this->current_deep ++;
                     $this->join[] = $child['targetEntity'];
                     $j = $this->generateAlias();
                     $table = strtolower(str_replace('Entity\\', '', $child['targetEntity']));

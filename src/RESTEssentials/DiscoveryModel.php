@@ -96,6 +96,7 @@ class DiscoveryModel {
 
         $default_model = new Model\DefaultModel($this->getEntityManager());
         $default_model->setEntity('Entity\\' . $entity);
+        ($this->params['deep'] ? $default_model->setMax_deep($this->params['deep']) : null);
 
         if (!$from_form) {
             switch ($this->getMethod()) {
