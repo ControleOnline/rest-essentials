@@ -11,16 +11,18 @@ class DiscoveryEntity {
     private $entityFolder;
     private $namespace;
     private $dbConfig;
+    private $config;
 
-    public function __construct($em, $dbConfig) {
+    public function __construct($em, $dbConfig, $config) {
         $this->em = $em;
-        $this->entityFolder = getcwd() . DIRECTORY_SEPARATOR . 'entity';
+        $this->config = $config;
+        $this->entityFolder = $this->config['EntityPath'];
         $this->namespace = 'Entity\\';
         $this->dbConfig = $dbConfig;
     }
 
     public function prepareFolder() {
-        is_dir($this->entityFolder)? : mkdir($this->entityFolder, 0777, true);
+        is_dir($this->entityFolder . DIRECTORY_SEPARATOR . 'Entity')? : mkdir($this->entityFolder . DIRECTORY_SEPARATOR . 'Entity', 0777, true);
         is_dir($this->entityFolder . DIRECTORY_SEPARATOR . 'proxies')? : mkdir($this->entityFolder . DIRECTORY_SEPARATOR . 'proxies', 0777, true);
     }
 
@@ -47,7 +49,7 @@ class DiscoveryEntity {
     }
 
     public function checkEntities() {
-        if (!is_dir($this->entityFolder)) {
+        if (!is_dir($this->entityFolder . 'Entity')) {
             $this->prepareFolder();
             $this->configure();
 

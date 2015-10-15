@@ -12,12 +12,23 @@ class DiscoveryModel {
     private $method;
     private $viewMethod;
     private $rows;
+    private $config;
 
-    public function __construct($em, $method, $viewMethod, $params) {
+    public function __construct($em, $method, $viewMethod, $params, $config) {
         $this->setEntityManager($em);
         $this->setMethod($method);
         $this->setViewMethod($viewMethod);
         $this->setParams($this->prepareParams($params, $method));
+        $this->setConfig($config);
+    }
+
+    public function getConfig() {
+        return $this->config;
+    }
+
+    public function setConfig($config) {
+        $this->config = $config;
+        return $this;
     }
 
     /**
@@ -95,6 +106,7 @@ class DiscoveryModel {
     public function discovery($entity, $entity_parent = null, $from_form = false) {
 
         $default_model = new Model\DefaultModel($this->getEntityManager());
+        $default_model->setConfig($this->config);
         $default_model->setEntity('Entity\\' . $entity);
         ($this->params['deep'] ? $default_model->setMax_deep($this->params['deep']) : null);
 

@@ -13,7 +13,7 @@
                     <input id="input-<?= $key ?>" value="<?= (isset($this->response['form']['data']) && isset($this->response['form']['data'][strtolower($key)])) ? $this->response['form']['data'][strtolower($key)] : null ?>" name="<?= $key ?>" type="text" data-propreties='<?= json_encode($fields) ?>' placeholder="Enter <?= ucfirst($key) ?>">
                 </div>
             <?php endforeach ?>
-            <button type="submit" class="btn btn-default">Submit</button>
+            <button type="submit" class="btn btn-default">Save</button>
         </form>    
         <?php if (isset($this->response['form']['data']) && isset($this->response['form']['data']['id']) && $this->response['form']['data']['id']) { ?>
             <form action="<?= '/' . $this->response['form']['form_name'] . '.html' ?>" method="POST" name="form-<?= $this->response['form']['form_name'] ?>" role="form">
@@ -35,7 +35,7 @@
                     </div>
                 <?php } ?>
             <?php endforeach ?>        
-            <button type="submit" class="btn btn-default">Submit</button>        
+            <button type="submit" class="btn btn-default">Save</button>        
         </form>
         <?php if (isset($this->response['form']['data']) && isset($this->response['form']['data']['id']) && $this->response['form']['data']['id']) { ?>
             <form onSubmit="if (!confirm('Really remove this <?= ucfirst($this->response['form']['form_name']) ?>?')) {return false;}" action="<?= '/' . $this->response['form']['form_name'] . '.html' ?>" method="POST" name="form-<?= $this->response['form']['form_name'] ?>" role="form">

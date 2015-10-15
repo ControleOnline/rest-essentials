@@ -22,9 +22,19 @@ class DefaultModel {
     private $join = [];
     private $current_deep = 0;
     private $max_deep = 1;
+    private $config;
 
     public function __construct($em) {
         $this->em = $em;
+    }
+
+    public function getConfig() {
+        return $this->config;
+    }
+
+    public function setConfig($config) {
+        $this->config = $config;
+        return $this;
     }
 
     public function getMax_deep() {
@@ -52,7 +62,7 @@ class DefaultModel {
         return $cmf->getMetadataFor($this->entity_name);
     }
 
-    public function form($entity, $params = false) {
+    public function form($entity, $params = false) {        
         $return = [];
         $return['form_name'] = strtolower($entity);
         $metadata = $this->getMetadata();
@@ -90,6 +100,13 @@ class DefaultModel {
             } else {
                 return false;
             }
+        }
+    }
+
+    public function registerLog() {
+        if ($this->config['LogChanges']){
+            echo 'x';
+            die();
         }
     }
 

@@ -15,7 +15,8 @@ class Module {
     protected $controller;
 
     public function getDefaultConfig($config) {
-        $config['jsonStrategy'] = (isset($config['jsonStrategy']) ? $config['jsonStrategy'] : true);
+        $config['LogChanges'] = isset($config['LogChanges']) ? $config['LogChanges'] : true;
+        $config['EntityPath'] = isset($config['EntityPath']) ? $config['EntityPath'] : getcwd() . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'cache' . DIRECTORY_SEPARATOR;
         return $config;
     }
 
@@ -26,7 +27,7 @@ class Module {
         $config = $this->sm->get('config');
 
         $this->config = $this->getDefaultConfig(
-                (isset($config['zf2_essentials']) ? $config['zf2_essentials'] : array())
+                (isset($config['RESTEssentials']) ? : array())
         );
         $eventManager = $e->getApplication()->getEventManager();
         $moduleRouteListener = new ModuleRouteListener();
@@ -34,7 +35,7 @@ class Module {
         $this->setResponseType($e);
         if (isset($config['doctrine']['connection']['orm_default']['params'])) {
             $dbConfig = $config['doctrine']['connection']['orm_default']['params'];
-            $entity = new DiscoveryEntity($this->em, $dbConfig);
+            $entity = new DiscoveryEntity($this->em, $dbConfig, $config['RESTEssentials']);
             $entity->checkEntities();
         }
     }
@@ -58,12 +59,11 @@ class Module {
     }
 
     public function finishJsonStrategy(\Zend\Mvc\MvcEvent $e) {
-        if ($this->config['jsonStrategy']) {
-            $response = new Response();
-            $response->getHeaders()->addHeaderLine('Content-Type', 'application/json; charset=utf-8');
-            $response->setContent(Json::encode($e->getResult()->getVariables(), true));
-            $e->setResponse($response);
-        }
+
+        $response = new Response();
+        $response->getHeaders()->addHeaderLine('Content-Type', 'application/json; charset=utf-8');
+        $response->setContent(Json::encode($e->getResult()->getVariables(), true));
+        $e->setResponse($response);
     }
 
     public function setResponseType(\Zend\Mvc\MvcEvent $e) {
@@ -71,9 +71,6 @@ class Module {
     }
 
     public function verifyJsonStrategy(\Zend\Mvc\MvcEvent $e) {
-        if (!$this->config['jsonStrategy']) {
-            return false;
-        }
         $request = $e->getRequest();
         $headers = $request->getHeaders();
         $uri = $request->getUri()->getPath();
@@ -89,7 +86,6 @@ class Module {
             } else {
                 return false;
             }
-            
         }
         return false;
     }

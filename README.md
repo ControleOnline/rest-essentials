@@ -91,9 +91,9 @@ In your module.config.php file:
 namespace YourNameSpace;
 
 return array(
-        'RESTEssentials' => array(
-                //Configs of RESTEssentials here
-         )
+    'RESTEssentials' => array(
+            'EntityPath' => getcwd() . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'cache' . DIRECTORY_SEPARATOR
+        )
 );
 ```
 
