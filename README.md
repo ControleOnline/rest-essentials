@@ -99,23 +99,24 @@ return array(
 
 ## Usage ##
 
-### Ajax ###
-Get return from your Controller via Ajax:
-```
-$.ajax({
-    headers: {
-        Accept: "application/json; charset=utf-8",
-        "Content-Type": "application/json; charset=utf-8"
-    },
-    url:'http://localhost/<Module>/<Controller>/<Action>/<Parameters>',
-    data: "data",
-    success: function (response) {
-        console.log(response);
-    }});
-```
-Or simply add the .json suffix at the end of the URL:
+### JSON ###
+Simply add the .json suffix at the end of the URL:
 ```
 http://localhost/<Module>/<Controller>/<Action>.json?<Parameters>
+http://localhost/<Entity>.json?<Parameters>
+```
+
+### FORM ###
+Simply add the .form suffix at the end of the URL:
+```
+http://localhost/<Module>/<Controller>/<Action>.form?<Parameters>
+http://localhost/<Entity>.form?<Parameters>
+```
+### HTML ###
+Simply add the .html suffix at the end of the URL:
+```
+http://localhost/<Module>/<Controller>/<Action>.html?<Parameters>
+http://localhost/<Entity>.html?<Parameters>
 ```
 
 ### REST ###
@@ -133,4 +134,10 @@ http://localhost/<Entity>.json?page=2&limit=100 //Return second page limited by 
 If the browser does not support PUT, DELETE and OPTIONS use :
 ```
 http://localhost/<Entity>.json?method=PUT //Return second page limited by 100 records
+```
+
+#### Child Deep ####
+To get more childs, add deep parameter on URL :
+```
+http://localhost/<Entity>.json?deep=10
 ```
