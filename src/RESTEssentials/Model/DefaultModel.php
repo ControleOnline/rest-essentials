@@ -21,7 +21,7 @@ class DefaultModel {
     private $alias = [];
     private $join = [];
     private $current_deep = 0;
-    private $max_deep = 1;
+    private $max_deep = 0;
     private $config;
 
     public function __construct($em) {
@@ -62,7 +62,7 @@ class DefaultModel {
         return $cmf->getMetadataFor($this->entity_name);
     }
 
-    public function form($entity, $params = false) {        
+    public function form($entity, $params = false) {
         $return = [];
         $return['form_name'] = strtolower($entity);
         $metadata = $this->getMetadata();
@@ -104,7 +104,7 @@ class DefaultModel {
     }
 
     public function registerLog() {
-        if ($this->config['LogChanges']){
+        if ($this->config['LogChanges']) {
             echo 'x';
             die();
         }
@@ -152,7 +152,8 @@ class DefaultModel {
     }
 
     private function getChilds(\Doctrine\ORM\QueryBuilder &$qb, $entity_name, $join_alias) {
-        if ($this->current_deep < $this->max_deep) {
+
+        if ($this->max_deep && $this->current_deep < $this->max_deep) {
             $childs = $this->em->getClassMetadata($entity_name)->getAssociationMappings();
             foreach ($childs as $key => $child) {
                 if ($child['targetEntity'] && !in_array($child['targetEntity'], $this->join)) {
