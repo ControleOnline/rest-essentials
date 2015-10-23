@@ -6,6 +6,9 @@ use Zend\Mvc\ModuleRouteListener;
 use Zend\Mvc\MvcEvent;
 use Zend\Http\Response;
 use Zend\Json\Json;
+use Zend\View\Resolver\TemplatePathStack;
+use Zend\View\Resolver\TemplateMapResolver;
+use RESTEssentials\Helper\Url;
 
 class Module {
 
@@ -13,14 +16,18 @@ class Module {
     protected $config;
     protected $em;
     protected $controller;
+    protected $module;
 
     public function getDefaultConfig($config) {
+        $config['DefaultModule'] = isset($config['DefaultModule']) ? $config['DefaultModule'] : 'Home';
+        $config['DefaultController'] = isset($config['DefaultController']) ? $config['DefaultController'] : 'Default';
         $config['LogChanges'] = isset($config['LogChanges']) ? $config['LogChanges'] : true;
         $config['EntityPath'] = isset($config['EntityPath']) ? $config['EntityPath'] : getcwd() . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'cache' . DIRECTORY_SEPARATOR;
         return $config;
     }
 
     public function onBootstrap(\Zend\Mvc\MvcEvent $e) {
+
 
         $this->sm = $e->getApplication()->getServiceManager();
         $this->em = $this->sm->get('Doctrine\ORM\EntityManager');
@@ -38,14 +45,52 @@ class Module {
             $entity = new DiscoveryEntity($this->em, $dbConfig, $config['RESTEssentials']);
             $entity->checkEntities();
         }
+        $this->configDefaultViewOptions($eventManager);
+    }
+
+    private function configDefaultViewOptions($eventManager) {
+        $eventManager->attach(MvcEvent::EVENT_RENDER, function(MvcEvent $event) {
+
+            $baseDir = getcwd() . DIRECTORY_SEPARATOR . 'module' . DIRECTORY_SEPARATOR . $this->module . DIRECTORY_SEPARATOR . 'view';
+
+            $sm = $event->getParam('application')->getServiceManager();
+            /** @var TemplateMapResolver $viewResolverMap */
+            $viewResolverMap = $sm->get('ViewTemplateMapResolver');
+
+            if (is_file($baseDir . '/layout/layout.phtml')) {
+                $viewResolverMap->add('layout/layout', $baseDir . '/layout/layout.phtml');
+            }
+            if (is_file($baseDir . '/error/404.phtml')) {
+                $viewResolverMap->add('error/404', $baseDir . '/error/404.phtml');
+            }
+            if (is_file($baseDir . '/error/index.phtml')) {
+                $viewResolverMap->add('error/index', $baseDir . '/error/index.phtml');
+            }
+            /** @var TemplatePathStack $viewResolverPathStack */
+            $viewResolverPathStack = $sm->get('ViewTemplatePathStack');
+            $viewResolverPathStack->addPath($baseDir);
+            $viewResolverPathStack->addPath(__DIR__ . DIRECTORY_SEPARATOR . 'view');
+        }, 10);
     }
 
     public function init(\Zend\ModuleManager\ModuleManager $mm) {
+
+        $config = $this->getDefaultConfig($this->config);
         $uri = array_values(array_filter(explode('/', $_SERVER['REQUEST_URI'])));
         if (isset($uri[0]) && isset($uri[1])) {
-            $module = explode('.', ucfirst($uri[0]));
-            $controller = explode('.', ucfirst($uri[1]));
-            $class = '\\' . $module[0] . '\\Controller\\' . $controller[0] . 'Controller';
+            $class = '\\' . ucfirst(Url::removeSufix($uri[0])) . '\\Controller\\' . ucfirst(Url::removeSufix($uri[1])) . 'Controller';
+            $this->module = ucfirst(Url::removeSufix($uri[0]));
+            $this->controller = $class;
+        } elseif (isset($uri[0])) {
+            $controller = $config['DefaultController'];
+            $class = '\\' . ucfirst(Url::removeSufix($uri[0])) . '\\Controller\\' . $controller . 'Controller';
+            $this->module = ucfirst(Url::removeSufix($uri[0]));
+            $this->controller = $class;
+        } else {
+            $module = $config['DefaultModule'];
+            $controller = $config['DefaultController'];
+            $class = '\\' . $module . '\\Controller\\' . $controller . 'Controller';
+            $this->module = $module;
             $this->controller = $class;
         }
     }
@@ -104,6 +149,7 @@ class Module {
         );
         $config = \Zend\Stdlib\ArrayUtils::merge(array('RESTEssentials' => $this->config), (include __DIR__ . '/config/module.config.php'));
         $config['doctrine']['driver']['Entity']['paths'][] = $this->config['EntityPath'];
+
         return $config;
     }
 

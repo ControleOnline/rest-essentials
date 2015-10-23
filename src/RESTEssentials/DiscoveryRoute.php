@@ -3,6 +3,7 @@
 namespace RESTEssentials;
 
 use Zend\Stdlib\RequestInterface as Request;
+use RESTEssentials\Helper\Url;
 
 class DiscoveryRoute {
 
@@ -14,7 +15,6 @@ class DiscoveryRoute {
     protected $_url;
     protected $_defaultRoute;
     protected $_EntityChildren;
-    protected $_sufix = array('.json', '.form', '.html');
 
     public function __construct($defaultRoute) {
         $this->setDefaultRoute($defaultRoute);
@@ -31,8 +31,8 @@ class DiscoveryRoute {
         $params = $this->getUrl();
         $qtde = count($params);
         for ($i = 0; $i < $qtde; $i += 2) {
-            $key = str_replace($this->_sufix, '', $params[$i]);
-            $value = isset($params[$i + 1]) ? str_replace($this->_sufix, '', $params[$i + 1]) : null;
+            $key = Url::removeSufix($params[$i]);
+            $value = isset($params[$i + 1]) ? Url::removeSufix($params[$i + 1]) : null;
             $request->getQuery()->set($key, $value);
         }
     }
@@ -62,10 +62,9 @@ class DiscoveryRoute {
     protected function discoveryByController($routes) {
 
         $defaultRoute = $this->getDefaultRoute();
-        $module = $this->camelCase((isset($routes[0]) ? str_replace($this->_sufix, '', $routes[0]) : $defaultRoute['module']));
-        $class_name = $this->camelCase((isset($routes[1]) ? str_replace($this->_sufix, '', $routes[1]) : $defaultRoute['controller']));
+        $module = $this->camelCase((isset($routes[0]) ? Url::removeSufix($routes[0]) : $defaultRoute['module']));
+        $class_name = $this->camelCase((isset($routes[1]) ? Url::removeSufix($routes[1]) : $defaultRoute['controller']));
         $controller = $this->formatClass($class_name, 'Controller', $module) . 'Controller';
-
         if (class_exists($controller)) {
             $this->setModule($module);
             $this->setController($controller);
@@ -77,10 +76,11 @@ class DiscoveryRoute {
     }
 
     protected function discoveryByEntity($routes) {
+
         $defaultRoute = $this->getDefaultRoute();
-        $entity = $this->camelCase((isset($routes[0]) ? str_replace($this->_sufix, '', $routes[0]) : null));
-        $this->setModule($defaultRoute['module']);
-        $this->setController($this->formatClass($defaultRoute['controller'], 'Controller', $defaultRoute['module']));
+        $entity = $this->camelCase((isset($routes[0]) ? Url::removeSufix($routes[0]) : null));
+        $this->setModule($defaultRoute['discoveryModule']);
+        $this->setController($this->formatClass($defaultRoute['controller'], 'Controller', $defaultRoute['discoveryModule']));
         $this->setAction($defaultRoute['action']);
 
         if ($entity) {
@@ -113,7 +113,7 @@ class DiscoveryRoute {
         $routes = $this->getUrl();
         $count = count($routes);
         if ($count % 2 != 0 && $count > 0) {
-            $this->setEntityChildren(str_replace($this->_sufix, '', $routes[$count - 1]));
+            $this->setEntityChildren(Url::removeSufix($routes[$count - 1]));
             unset($routes[$count - 1]);
             $this->setUrl($routes);
         }
@@ -136,6 +136,7 @@ class DiscoveryRoute {
             'entity' => $this->camelCase($this->getEntity()),
             'entity_children' => $this->camelCase($this->getEntityChildren())
         );
+
         return array_merge($default, $return);
     }
 

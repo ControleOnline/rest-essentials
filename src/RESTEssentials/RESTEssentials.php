@@ -35,7 +35,6 @@ class RESTEssentials implements RouteInterface {
         if (!method_exists($request, 'getUri')) {
             return null;
         }
-
         $uri = $request->getUri();
         $fullPath = $uri->getPath();
         $path = substr($fullPath, $pathOffset);

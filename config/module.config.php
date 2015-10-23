@@ -8,6 +8,16 @@ return array(
     ),
     'router' => array(
         'routes' => array(
+            'home' => array(
+                'type' => 'Zend\Mvc\Router\Http\Literal',
+                'options' => array(
+                    'route' => '/',
+                    'defaults' => array(
+                        'controller' => 'Home\Controller\Default',
+                        'action' => 'index',
+                    ),
+                ),
+            ),
             'default' => array(
                 'type' => 'RESTEssentials\RESTEssentials',
                 'options' => array(
@@ -18,7 +28,8 @@ return array(
                         'action' => '[a-zA-Z][a-zA-Z0-9_-]*',
                     ),
                     'defaults' => array(
-                        'module' => 'RESTEssentials',
+                        'discoveryModule' => 'RESTEssentials',
+                        'module' => 'Home',
                         'controller' => 'Default',
                         'action' => 'index',
                     ),
@@ -26,7 +37,6 @@ return array(
             )
         )
     ),
-    // Doctrine configuration
     'doctrine' => array(
         'driver' => array(
             'Entity' => array(
@@ -39,10 +49,5 @@ return array(
                 ),
             ),
         ),
-    ),
-    'view_manager' => array(
-        'template_path_stack' => array(
-            __DIR__ . '/../view',
-        ),
-    ),
+    )
 );
