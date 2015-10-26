@@ -7,7 +7,7 @@ use Zend\Stdlib\RequestInterface as Request;
 use Zend\Stdlib\ArrayUtils;
 use Zend\Mvc\Router\Exception\InvalidArgumentException;
 use Zend\Mvc\Router\Http\RouteMatch;
-use RESTEssentials\DiscoveryRoute;
+use RESTEssentials\DiscoveryRestRoute;
 
 class RESTEssentials implements RouteInterface {
 
@@ -39,7 +39,7 @@ class RESTEssentials implements RouteInterface {
         $fullPath = $uri->getPath();
         $path = substr($fullPath, $pathOffset);
         $alias = trim($path, '/');
-        $discovery = new DiscoveryRoute($this->defaults);
+        $discovery = new DiscoveryRestRoute($this->defaults);
         $discovery->setUrl($alias);
         $options = $discovery->getRoute();
         $discovery->setGetParams($request);
