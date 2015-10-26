@@ -3,7 +3,7 @@
 namespace RESTEssentials;
 
 use Zend\Stdlib\RequestInterface as Request;
-use RESTEssentials\Helper\Url;
+use Core\Helper\Url;
 
 class DiscoveryRoute {
 
@@ -37,18 +37,19 @@ class DiscoveryRoute {
         }
     }
 
+    private function getMethodType($uri, array $search = array('json', 'form')) {
+        foreach ($search AS $compare) {
+            $c = '.' . $compare;
+            $method = substr_compare($uri, $c, strlen($uri) - strlen($c), strlen($c)) === 0;
+            $return = $method ? $compare : null;
+        }
+        return $return;
+    }
+
     public function setMethod(Request $request, $uri) {
-        $compare = '.form';
-        $method = substr_compare($uri, $compare, strlen($uri) - strlen($compare), strlen($compare)) === 0;
-        $is_form = $method ? 'form' : null;
-
-
-        $compare = '.json';
-        $method = substr_compare($uri, $compare, strlen($uri) - strlen($compare), strlen($compare)) === 0;
-        $is_json = $method ? 'json' : null;
-
-        $request->getQuery()->set('viewMethod', strtolower($is_form? : $is_json? : 'html'));
-        $request->getQuery()->set('method', strtoupper($request->getQuery()->get('method')? : $request->getPost()->get('method')? : $_SERVER['REQUEST_METHOD']));
+        $method = $this->getMethodType($uri);
+        $request->getQuery()->set('viewMethod', strtolower($method? : 'html'));
+        $request->getQuery()->set('method', strtoupper($request->getQuery()->get('method')? : $request->getPost()->get('method')? : filter_input(INPUT_SERVER, 'REQUEST_METHOD')));
     }
 
     protected function formatClass($class, $type, $module = null) {
