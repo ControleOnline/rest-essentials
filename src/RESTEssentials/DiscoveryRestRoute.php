@@ -9,9 +9,9 @@ class DiscoveryRestRoute extends DiscoveryRoute {
 
     protected function discoveryRoute($default) {
         $routes = $this->getUrl();
-        $this->discoveryByController($routes);
-        if ($this->getController()) {
-            $this->discoveryAction($routes);
+        $this->discoveryByController($routes);                
+        if ($this->getController()) {            
+            $this->discoveryAction();
         } else {
             $this->discoveryByEntity($routes);
             $this->discoveryEntityChildren();
@@ -24,7 +24,6 @@ class DiscoveryRestRoute extends DiscoveryRoute {
             'entity' => $this->camelCase($this->getEntity()),
             'entity_children' => $this->camelCase($this->getEntityChildren())
         );
-
         return array_merge($default, $return);
     }
 

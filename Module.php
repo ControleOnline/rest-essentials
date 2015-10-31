@@ -3,15 +3,12 @@
 namespace RESTEssentials;
 
 use Zend\Mvc\ModuleRouteListener;
-use Core\Helper\Url;
 
 class Module {
 
     protected $sm;
     protected $config;
     protected $em;
-    protected $controller;
-    protected $module;
 
     public function getDefaultConfig($config) {
         $config['DefaultModule'] = isset($config['DefaultModule']) ? $config['DefaultModule'] : 'Home';
@@ -32,32 +29,7 @@ class Module {
         $eventManager = $e->getApplication()->getEventManager();
         $moduleRouteListener = new ModuleRouteListener();
         $moduleRouteListener->attach($eventManager);
-        
     }
-
-
-    public function init(\Zend\ModuleManager\ModuleManager $mm) {
-
-        $config = $this->getDefaultConfig($this->config);
-        $uri = array_values(array_filter(explode('/', $_SERVER['REQUEST_URI'])));
-        if (isset($uri[0]) && isset($uri[1])) {
-            $class = '\\' . ucfirst(Url::removeSufix($uri[0])) . '\\Controller\\' . ucfirst(Url::removeSufix($uri[1])) . 'Controller';
-            $this->module = ucfirst(Url::removeSufix($uri[0]));
-            $this->controller = $class;
-        } elseif (isset($uri[0])) {
-            $controller = $config['DefaultController'];
-            $class = '\\' . ucfirst(Url::removeSufix($uri[0])) . '\\Controller\\' . $controller . 'Controller';
-            $this->module = ucfirst(Url::removeSufix($uri[0]));
-            $this->controller = $class;
-        } else {
-            $module = $config['DefaultModule'];
-            $controller = $config['DefaultController'];
-            $class = '\\' . $module . '\\Controller\\' . $controller . 'Controller';
-            $this->module = $module;
-            $this->controller = $class;
-        }
-    }
-
 
     public function getConfig() {
         $this->config = $this->getDefaultConfig(
