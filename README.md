@@ -83,19 +83,6 @@ return array(
         ),
     ),
 );
-```
-In your module.config.php file:
-
-```
-<?php
-namespace YourNameSpace;
-
-return array(
-    'RESTEssentials' => array(
-            'EntityPath' => getcwd() . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'cache' . DIRECTORY_SEPARATOR
-        )
-);
-```
 
 ## Usage ##
 
