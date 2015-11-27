@@ -9,8 +9,8 @@ class DiscoveryRestRoute extends DiscoveryRoute {
 
     protected function discoveryRoute($default) {
         $routes = $this->getUrl();
-        $this->discoveryByController($routes);                
-        if ($this->getController()) {            
+        $this->discoveryByController($routes);
+        if ($this->getController()) {
             $this->discoveryAction();
         } else {
             $this->discoveryByEntity($routes);
@@ -39,8 +39,7 @@ class DiscoveryRestRoute extends DiscoveryRoute {
             $class_name = $this->formatClass($entity, 'Entity');
             $this->setEntity($entity);
             if (class_exists($class_name)) {
-                $url = $this->getUrl();
-                unset($url[0]);
+                $url = $this->removeClassFromUrl($this->getUrl(), $entity);
                 $this->setUrl($url);
             }
         }
@@ -50,8 +49,9 @@ class DiscoveryRestRoute extends DiscoveryRoute {
         $routes = $this->getUrl();
         $count = count($routes);
         if ($count % 2 != 0 && $count > 0) {
-            $this->setEntityChildren(Url::removeSufix($routes[$count - 1]));
-            unset($routes[$count - 1]);
+            $index = $count - 1;
+            $this->setEntityChildren(Url::removeSufix($routes[$index]));
+            $routes = $this->removeClassFromUrl($routes, null, ($index));
             $this->setUrl($routes);
         }
     }
