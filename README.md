@@ -83,7 +83,7 @@ return array(
         ),
     ),
 );
-
+```
 ## Usage ##
 
 ### JSON ###

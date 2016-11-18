@@ -22,8 +22,8 @@
         "component-dir": "public/components"
     },
     "require": {
-        "php": ">=5.5",
+        "php": "~7.0",
         "zendframework/zendframework": "~2.0",
-        "controleonline/core": "*"
+        "controleonline/core": ">=1.2.10"
     }
 }
