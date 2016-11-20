@@ -82,7 +82,7 @@ return array(
 );
 ```
 ### Configure Session ###
-In your config/autoload/session.global.php confiruration add the following:
+In your config/autoload/session.local.php confiruration add the following:
 
 ```
 <?php
