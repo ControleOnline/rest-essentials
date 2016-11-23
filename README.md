@@ -19,12 +19,17 @@ Add these lines to your composer.json:
 ```
     "require": {
         "controleonline/rest-essentials": "*"        
-    }
+    },
+    "scripts": {
+        "post-update-cmd": [
+            "git describe --abbrev=0 --tags > .version"
+        ]
+    },
 
 ```
 
 
-### Settings ###
+## Settings ##
 
 **Default settings**
 ```
