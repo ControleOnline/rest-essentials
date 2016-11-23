@@ -82,7 +82,7 @@ return array(
 );
 ```
 ### Configure Session ###
-In your config/autoload/session.local.php confiruration add the following:
+In your config/autoload/session.global.php confiruration add the following:
 
 ```
 <?php
@@ -143,12 +143,32 @@ http://localhost/<Module>/<Controller>/<Action>.form?<Parameters>
 http://localhost/<Entity>.form?<Parameters>
 ```
 ### HTML ###
-Simply add the .html suffix at the end of the URL:
+Simply add the .html suffix at the end of the URL to set view terminal:
 ```
 http://localhost/<Module>/<Controller>/<Action>.html?<Parameters>
 http://localhost/<Entity>.html?<Parameters>
 ```
+If you need to change the suffix, just change in the setting (config/application.config.local.php):
+```
+<?php
+return array(
+    'view' => array(
+        'terminal_sufix' => array(            
+            '.html',
+            '.ajax' //Another extension
+        )
+    ),
+    //Another configs
+)
+```
 
+Do not forget to return a ViewModel on your controller:
+```
+        $view = new ViewModel();
+        //Your code
+        $this->_view->setVariables(\ControleOnline\Core\Helper\Format::returnData(array('Test')));
+        return $view;
+```
 ### REST ###
 To return directly your Entity, use the REST standard
 ```

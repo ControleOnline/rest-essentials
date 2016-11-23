@@ -5,9 +5,10 @@
     "homepage": "http://controleonline.com/",
     "type": "library",
     "keywords": [
-        "html",
-        "compress",
-        "minify"
+        "api",
+        "webserver",
+        "rest",
+        "restfull"
     ],
     "autoload": {
         "psr-4": {
@@ -21,9 +22,7 @@
         "preferred-install": "dist",
         "component-dir": "public/components"
     },
-    "require": {
-        "php": "~7.0",
-        "zendframework/zendframework": "~2.0",
+    "require": {                
         "controleonline/core": "*"
     }
 }
