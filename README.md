@@ -39,6 +39,40 @@ $config = array(
 );
 ```
 
+
+**Default URL settings**
+In your config/module.config.php confiruration add the following:
+```
+<?php
+
+return array(
+    'router' => array(
+        'routes' => array(
+            'default' => array(
+                'type' => 'RESTEssentials\RESTEssentials',
+                'options' => array(
+                    'route' => '/[:module][/:controller[/:action]]',
+                    'constraints' => array(
+                        'module' => '[a-zA-Z][a-zA-Z0-9_-]*',
+                        'controller' => '[a-zA-Z][a-zA-Z0-9_-]*',
+                        'action' => '[a-zA-Z][a-zA-Z0-9_-]*',
+                    ),
+                    'defaults' => array(
+                        'discoveryModule' => 'Core',
+                        'module' => 'Home',
+                        'controller' => 'Default',
+                        'action' => 'index',
+                        'base_url' => 'api', //Base URL of API
+                    ),
+                ),
+            )
+        )
+    )
+);
+```
+**Default base_url is 'api'. If you need change base_url, just set 'base_url' in your config/module.config.php**
+
+
 ### Configure DB ###
 In your config/autoload/database.local.php confiruration add the following:
 
@@ -138,20 +172,20 @@ return array(
 Simply add the .json suffix at the end of the URL:
 ```
 http://localhost/<Module>/<Controller>/<Action>.json?<Parameters>
-http://localhost/<Entity>.json?<Parameters>
+http://localhost/<BaseUrl><Entity>.json?<Parameters>
 ```
 
 ### FORM ###
 Simply add the .form suffix at the end of the URL:
 ```
 http://localhost/<Module>/<Controller>/<Action>.form?<Parameters>
-http://localhost/<Entity>.form?<Parameters>
+http://localhost/<BaseUrl><Entity>.form?<Parameters>
 ```
 ### HTML ###
 Simply add the .html suffix at the end of the URL to set view terminal:
 ```
 http://localhost/<Module>/<Controller>/<Action>.html?<Parameters>
-http://localhost/<Entity>.html?<Parameters>
+http://localhost/<BaseUrl><Entity>.html?<Parameters>
 ```
 If you need to change the suffix, just change in the setting (config/application.config.local.php):
 ```
@@ -177,22 +211,22 @@ Do not forget to return a ViewModel on your controller:
 ### REST ###
 To return directly your Entity, use the REST standard
 ```
-http://localhost/<Entity>/id/<ID>.json?<Parameters> //Find By ID
-http://localhost/<Entity>.json?<Parameters> //Return all records
-http://localhost/<Entity>/id/<ID>/<Children>.json?<Parameters> //Find By Parent ID
+http://localhost/<BaseUrl><Entity>/id/<ID>.json?<Parameters> //Find By ID
+http://localhost/<BaseUrl><Entity>.json?<Parameters> //Return all records
+http://localhost/<BaseUrl><Entity>/id/<ID>/<Children>.json?<Parameters> //Find By Parent ID
 ```
 #### Pagination ####
 ```
-http://localhost/<Entity>.json?page=2&limit=100 //Return second page limited by 100 records
+http://localhost/<BaseUrl><Entity>.json?page=2&limit=100 //Return second page limited by 100 records
 ```
 #### Override methods ####
 If the browser does not support PUT, DELETE and OPTIONS use :
 ```
-http://localhost/<Entity>.json?method=PUT //Return second page limited by 100 records
+http://localhost/<BaseUrl><Entity>.json?method=PUT //Return second page limited by 100 records
 ```
 
 #### Child Deep ####
 To get more childs, add deep parameter on URL :
 ```
-http://localhost/<Entity>.json?deep=10
+http://localhost/<BaseUrl><Entity>.json?deep=10
 ```

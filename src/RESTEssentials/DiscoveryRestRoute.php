@@ -28,8 +28,12 @@ class DiscoveryRestRoute extends DiscoveryRoute {
     }
 
     protected function discoveryByEntity($routes) {
-
         $defaultRoute = $this->getDefaultRoute();
+        if ($routes && strtolower($defaultRoute['base_url']) == strtolower($routes[0])) {
+            unset($routes[0]);
+            $this->setUrl(implode('/', $routes));
+            $routes = array_values($routes);
+        }
         $entity = $this->camelCase((isset($routes[0]) ? Url::removeSufix($routes[0]) : null));
         $this->setModule($defaultRoute['discoveryModule']);
         $this->setController($this->formatClass($defaultRoute['controller'], 'Controller', $defaultRoute['discoveryModule']));
