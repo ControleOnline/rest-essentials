@@ -23,6 +23,7 @@
         "component-dir": "public/components"
     },
     "require": {                
-        "controleonline/core": "*"
+        "controleonline/core": "*",
+        "controleonline/user": "*"
     }
 }
