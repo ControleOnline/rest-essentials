@@ -2,7 +2,7 @@
     "name": "controleonline/rest-essentials",
     "description": "REST Essentials",
     "license": "BSD-3-Clause",
-    "homepage": "http://controleonline.com/",
+    "homepage": "https://github.com/ControleOnline/rest-essentials",
     "type": "library",
     "keywords": [
         "api",
