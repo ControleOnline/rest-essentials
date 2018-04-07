@@ -1,19 +1,15 @@
-[![Build Status](https://travis-ci.org/ControleOnline/rest-essentials.svg)](https://travis-ci.org/ControleOnline/rest-essentials)
-[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/ControleOnline/rest-essentials/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/ControleOnline/rest-essentials/)
-[![Code Coverage](https://scrutinizer-ci.com/g/ControleOnline/rest-essentials/badges/coverage.png?b=master)](https://scrutinizer-ci.com/g/ControleOnline/rest-essentials/)
-[![Build Status](https://scrutinizer-ci.com/g/ControleOnline/rest-essentials/badges/build.png?b=master)](https://scrutinizer-ci.com/g/ControleOnline/rest-essentials/)
+[![Build Status](https://travis-ci.org/ControleOnline/user.svg)](https://travis-ci.org/ControleOnline/user)
+[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/ControleOnline/user/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/ControleOnline/user/)
+[![Code Coverage](https://scrutinizer-ci.com/g/ControleOnline/user/badges/coverage.png?b=master)](https://scrutinizer-ci.com/g/ControleOnline/user/)
+[![Build Status](https://scrutinizer-ci.com/g/ControleOnline/user/badges/build.png?b=master)](https://scrutinizer-ci.com/g/ControleOnline/user/)
 
+# User management and login #
 
-More on [Controle Online](http://controleonline.com "Controle Online").
-
-# REST Essentials #
-
-This software aims to be engaged in any system and without any additional line programming is required, the final code is automatically optimized.
 
 ## Features ##
-* Automatic create Entities from Doctrine
-* Automatic create default routes to REST
-* Automatic generate your Form to REST
+* User create account
+* User login
+* Store user session on database (Common on balanced servers)
 
 ## Installation ##
 ### Composer ###
@@ -21,60 +17,12 @@ Add these lines to your composer.json:
 
 ```
     "require": {
-        "controleonline/rest-essentials": "*"        
-    },
-    "scripts": {
-        "post-update-cmd": [
-            "git describe --abbrev=0 --tags > .version"
-        ]
-    },
-
+        "controleonline/user": "*"        
+    }
 ```
 
 
 ## Settings ##
-
-**Default settings**
-```
-<?php
-$config = array(
-        'APP_ENV' => 'production', //Default configs to production or development
-);
-```
-
-
-**Default URL settings**
-In your config/module.config.php confiruration add the following:
-```
-<?php
-
-return array(
-    'router' => array(
-        'routes' => array(
-            'default' => array(
-                'type' => 'RESTEssentials\RESTEssentials',
-                'options' => array(
-                    'route' => '/[:module][/:controller[/:action]]',
-                    'constraints' => array(
-                        'module' => '[a-zA-Z][a-zA-Z0-9_-]*',
-                        'controller' => '[a-zA-Z][a-zA-Z0-9_-]*',
-                        'action' => '[a-zA-Z][a-zA-Z0-9_-]*',
-                    ),
-                    'defaults' => array(
-                        'discoveryModule' => 'Core',
-                        'module' => 'Home',
-                        'controller' => 'Default',
-                        'action' => 'index',
-                        'base_url' => 'api', //Base URL of API
-                    ),
-                ),
-            )
-        )
-    )
-);
-```
-**Default base_url is 'api'. If you need change base_url, just set 'base_url' in your config/module.config.php**
-
 
 ### Configure DB ###
 In your config/autoload/database.local.php confiruration add the following:
@@ -154,7 +102,7 @@ In your config/application.config.php confiruration add the following:
 ```
 <?php
 $modules = array(
-    'RESTEssentials' 
+    'User' 
 );
 return array(
     'modules' => $modules,
@@ -171,65 +119,29 @@ return array(
 ```
 ## Usage ##
 
-### JSON ###
-Simply add the .json suffix at the end of the URL:
+### Create Account ###
 ```
-http://localhost/<Module>/<Controller>/<Action>.json?<Parameters>
-http://localhost/<BaseUrl><Entity>.json?<Parameters>
+http://localhost/user/create-account
 ```
 
-### FORM ###
-Simply add the .form suffix at the end of the URL:
+### Login ###
 ```
-http://localhost/<Module>/<Controller>/<Action>.form?<Parameters>
-http://localhost/<BaseUrl><Entity>.form?<Parameters>
+http://localhost/user/login
 ```
-### HTML ###
-Simply add the .html suffix at the end of the URL to set view terminal:
+### Logout ###
 ```
-http://localhost/<Module>/<Controller>/<Action>.html?<Parameters>
-http://localhost/<BaseUrl><Entity>.html?<Parameters>
+http://localhost/user/logout
 ```
-If you need to change the suffix, just change in the setting (config/application.config.local.php):
+### Forgot Password ###
 ```
-<?php
-return array(
-    'view' => array(
-        'terminal_sufix' => array(            
-            '.html',
-            '.ajax' //Another extension
-        )
-    ),
-    //Another configs
-)
+http://localhost/user/forgot-password
+```
+### Forgot Username ###
+```
+http://localhost/user/forgot-username
 ```
 
-Do not forget to return a ViewModel on your controller:
+### Change User ###
 ```
-        $view = new ViewModel();
-        //Your code
-        $this->_view->setVariables(\ControleOnline\Core\Helper\Format::returnData(array('Test')));
-        return $view;
-```
-### REST ###
-To return directly your Entity, use the REST standard
-```
-http://localhost/<BaseUrl><Entity>/id/<ID>.json?<Parameters> //Find By ID
-http://localhost/<BaseUrl><Entity>.json?<Parameters> //Return all records
-http://localhost/<BaseUrl><Entity>/id/<ID>/<Children>.json?<Parameters> //Find By Parent ID
-```
-#### Pagination ####
-```
-http://localhost/<BaseUrl><Entity>.json?page=2&limit=100 //Return second page limited by 100 records
-```
-#### Override methods ####
-If the browser does not support PUT, DELETE and OPTIONS use :
-```
-http://localhost/<BaseUrl><Entity>.json?method=PUT //Return second page limited by 100 records
-```
-
-#### Child Deep ####
-To get more childs, add deep parameter on URL :
-```
-http://localhost/<BaseUrl><Entity>.json?deep=10
+http://localhost/user/change-user
 ```

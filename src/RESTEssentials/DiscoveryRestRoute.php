@@ -38,10 +38,9 @@ class DiscoveryRestRoute extends DiscoveryRoute {
         $this->setModule($defaultRoute['discoveryModule']);
         $this->setController($this->formatClass($defaultRoute['controller'], 'Controller', $defaultRoute['discoveryModule']));
         $this->setAction($defaultRoute['action']);
-
         if ($entity) {
             $class_name = $this->formatClass($entity, 'Entity');
-            $this->setEntity($entity);
+            $this->setEntity($class_name);
             if (class_exists($class_name)) {
                 $url = $this->removeClassFromUrl($this->getUrl(), $entity);
                 $this->setUrl($url);
